@@ -8,9 +8,9 @@ exclude_docs: |
   TODO.md
   */README.md
   */TODO.md
-# Set repo_url + repo_name before publishing (repository URL still open).
-# repo_url: https://github.com/ORG/datastreamdb
-# repo_name: datastreamdb
+site_url: https://fab679.github.io/datastreamdb/
+repo_url: https://github.com/fab679/datastreamdb
+repo_name: fab679/datastreamdb
 theme:
   name: material
   features:

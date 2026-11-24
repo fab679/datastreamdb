@@ -14,33 +14,28 @@ workspace `Cargo.toml`, `bindings/node/package.json`,
 ## 1. Rust crates → crates.io (28 crates)
 
 `cargo publish` has no workspace mode: publish leaf-first in
-dependency order. The order below was topologically sorted from
-`cargo metadata` — run it top to bottom, waiting ~30s between
-publishes for the index to catch up:
+dependency order. crates.io allows a **burst of 5 new crates**, then
+**1 new crate every 10 minutes**; a `429` response carries the exact
+next-publish timestamp.
+
+Use the canonical runner:
 
 ```sh
 cargo login  # once per machine
-for c in \
-  datastreamdb-audit datastreamdb-enc datastreamdb-filestore \
-  datastreamdb-lex datastreamdb-proto datastreamdb-acl \
-  datastreamdb-codec datastreamdb-algo datastreamdb-raft \
-  datastreamdb-store datastreamdb-types datastreamdb-core \
-  datastreamdb-ffi datastreamdb-tok datastreamdb-x \
-  datastreamdb-chunker datastreamdb-dql datastreamdb-schema \
-  datastreamdb-posting datastreamdb-backup datastreamdb-task \
-  datastreamdb-query datastreamdb-graphql datastreamdb-worker \
-  datastreamdb-frontend datastreamdb-xidmap datastreamdb-loader \
-  datastreamdb-server
-do cargo publish -p "$c"; sleep 30; done
+tools/publish-crates.sh
 ```
+
+It skips crates already visible on crates.io, verifies every path
+dependency before publishing a parent, persists its next-allowed slot
+across restarts, and honors `429` retry timestamps. The canonical
+28-crate order is in `docs/PUBLISH.md`.
 
 Notes:
 
 - `datastreamdb-node`, `datastreamdb-py`, and `xtask` are
   `publish = false` (they ship via npm/PyPI, not crates.io).
-- If a publish fails halfway, just re-run the loop — already
-  published crates error with "already exists" and you continue
-  past them.
+- If a publish fails halfway, rerun the script — it is resumable and
+  skips already-published crates.
 - Verify with `cargo package --workspace --offline --allow-dirty`
   first (see `docs/PUBLISH.md` for the cache-purge quirk).
 
@@ -98,8 +93,8 @@ on Linux).
 
 ## Checklist
 
-- [ ] `cargo publish` loop green (28 crates, in order above)
-- [ ] `npm publish` green (`@datastreamdb/core@0.1.0`)
-- [ ] `maturin publish` green (`datastreamdb==0.1.0`)
+- [x] `cargo publish` loop green (28 crates, in order above)
+- [x] `npm publish` green (`@datastreamdb/core@0.1.0`)
+- [x] `maturin publish` green (`datastreamdb==0.1.0`)
 - [ ] GitHub release `v0.1.0` with the C assets attached
 - [ ] Tag: `git tag v0.1.0 && git push origin v0.1.0`

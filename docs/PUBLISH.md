@@ -20,21 +20,37 @@ verify with `cargo package --workspace --offline --allow-dirty`
 
 ## crates.io order
 
-Publish strictly in this dependency order (one command per crate;
-wait for each to appear on crates.io before the next, or use
-`--wait-for-publish` via a loop):
+Publish leaf-first. crates.io allows a **burst of 5 new crates**, then
+**1 new crate every 10 minutes**; a `429` response carries the exact
+next-publish timestamp. A 30-second sleep is too short and will hit
+the limiter.
+
+Use the canonical runner:
 
 ```sh
-for c in \
-  datastreamdb-proto datastreamdb-acl datastreamdb-codec datastreamdb-algo datastreamdb-audit \
-  datastreamdb-lex datastreamdb-types datastreamdb-tok datastreamdb-x datastreamdb-chunker \
-  datastreamdb-enc datastreamdb-schema datastreamdb-store datastreamdb-posting datastreamdb-backup \
-  datastreamdb-core datastreamdb-dql datastreamdb-task datastreamdb-query datastreamdb-graphql \
-  datastreamdb-raft datastreamdb-worker datastreamdb-frontend datastreamdb-ffi datastreamdb-filestore \
-  datastreamdb-xidmap datastreamdb-loader datastreamdb-server; do
-  cargo publish -p "$c"
-done
+tools/publish-crates.sh
 ```
+
+It publishes in the order below, skips crates already visible on
+crates.io, verifies every path dependency is visible before a parent,
+persists its next-allowed slot across restarts, and honors `429`
+retry timestamps.
+
+Canonical order:
+
+```text
+datastreamdb-proto datastreamdb-acl datastreamdb-codec datastreamdb-algo datastreamdb-audit
+datastreamdb-lex datastreamdb-types datastreamdb-tok datastreamdb-x datastreamdb-chunker
+datastreamdb-enc datastreamdb-schema datastreamdb-store datastreamdb-posting datastreamdb-backup
+datastreamdb-core datastreamdb-dql datastreamdb-task datastreamdb-query datastreamdb-graphql
+datastreamdb-raft datastreamdb-filestore datastreamdb-worker datastreamdb-frontend datastreamdb-ffi
+datastreamdb-xidmap datastreamdb-loader datastreamdb-server
+```
+
+If publishing manually, run one `cargo publish -p <crate>` at a time and
+wait for that crate to appear before publishing anything that depends
+on it. Only new crates consume the 10-minute limiter; new versions of
+an existing crate use a separate limit (burst 30, then 1 per minute).
 
 Skipped (`publish = false`): `datastreamdb-node`, `datastreamdb-py`, `xtask`.
 
