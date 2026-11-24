@@ -1,0 +1,72 @@
+[package]
+name = "datastreamdb-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Standalone binaries: alpha, zero, bulk, live."
+documentation = "https://docs.rs/datastreamdb-server"
+
+[[bin]]
+name = "alpha"
+path = "src/bin/alpha.rs"
+
+[[bin]]
+name = "zero"
+path = "src/bin/zero.rs"
+
+[[bin]]
+name = "bulk"
+path = "src/bin/bulk.rs"
+
+[[bin]]
+name = "live"
+path = "src/bin/live.rs"
+
+[[bin]]
+name = "datastreamdb"
+path = "src/bin/datastreamdb.rs"
+
+[dependencies]
+anyhow.workspace = true
+axum.workspace = true
+bytes.workspace = true
+clap.workspace = true
+datastreamdb-acl.workspace = true
+datastreamdb-audit.workspace = true
+datastreamdb-core.workspace = true
+datastreamdb-frontend.workspace = true
+datastreamdb-enc.workspace = true
+datastreamdb-loader.workspace = true
+datastreamdb-posting.workspace = true
+datastreamdb-proto.workspace = true
+datastreamdb-query.workspace = true
+datastreamdb-raft.workspace = true
+datastreamdb-schema.workspace = true
+datastreamdb-store.workspace = true
+datastreamdb-worker.workspace = true
+datastreamdb-x.workspace = true
+futures.workspace = true
+openraft.workspace = true
+prost.workspace = true
+rpassword.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tonic.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+datastreamdb-acl.workspace = true
+datastreamdb-posting.workspace = true
+datastreamdb-schema.workspace = true
+datastreamdb-store.workspace = true
+datastreamdb-types.workspace = true
+datastreamdb-x.workspace = true
+reqwest.workspace = true
+tempfile.workspace = true
+
+[lints]
+workspace = true

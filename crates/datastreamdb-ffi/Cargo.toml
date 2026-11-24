@@ -1,0 +1,17 @@
+[package]
+name = "datastreamdb-ffi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Stable C ABI: instance handles for any language."
+documentation = "https://docs.rs/datastreamdb-ffi"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+datastreamdb-core.workspace = true
+
+[lints]
+workspace = true

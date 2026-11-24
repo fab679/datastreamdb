@@ -1,0 +1,14 @@
+[package]
+name = "datastreamdb-xidmap"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "External-ID to UID map (concurrent, persistent)."
+documentation = "https://docs.rs/datastreamdb-xidmap"
+
+[dependencies]
+parking_lot.workspace = true
+
+[lints]
+workspace = true

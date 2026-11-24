@@ -1,0 +1,152 @@
+[workspace]
+resolver = "2"
+members = ["crates/*", "bindings/node", "bindings/python", "tools/xtask"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0"
+
+# Pinned to the latest crates.io releases as of 2026-11-18.
+# `cargo xtask check-versions` re-verifies these against the registry.
+[workspace.dependencies]
+# async / web / grpc
+tokio = { version = "1.54.1", features = ["full"] }
+futures = "0.3.34"
+axum = { version = "0.8.9", features = ["json"] }
+tower = "0.5.3"
+http = "1.5.0"
+tonic = "0.14.9"
+tonic-build = "0.14.9"
+tonic-prost = "0.14.9"
+tonic-prost-build = "0.14.9"
+prost = "0.14.6"
+prost-build = "0.14.6"
+async-graphql = "8.0.0-rc.5"
+async-graphql-parser = "8.0.0-rc.5"
+async-graphql-value = "8.0.0-rc.5"
+# serialization / bytes
+reqwest = { version = "0.12.28", default-features = false, features = ["blocking", "json"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = { version = "1.0.154", features = ["raw_value"] }
+bytes = "1.12.2"
+# errors / observability
+thiserror = "2.0.21"
+anyhow = "1.0.104"
+async-trait = "0.1.92"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
+prometheus = "0.14.0"
+opentelemetry = "0.33.1"
+# storage / consensus / search (heavy engines; wired as ports land)
+fjall = "3.1.13"
+openraft = "0.10.0"
+tantivy = "0.27.0"
+# parsing
+logos = "0.16.1"
+nom = "8.0.0"
+regex = "1.13.2"
+# auth / crypto
+hmac = "0.13.0"
+sha2 = "0.11.1"
+jsonwebtoken = { version = "12.0.0", features = ["rust_crypto"] }
+aes = "0.9"
+ctr = "0.10"
+getrandom = "0.4"
+zeroize = { version = "1.9.2", features = ["derive"] }
+rsa = "0.10"
+p256 = "0.14"
+p384 = "0.14"
+ed25519-dalek = "3.0"
+elliptic-curve = "0.14"
+pkcs8 = "0.11"
+base64 = "0.23"
+# data structures / concurrency / utils
+rayon = "1.12.0"
+parking_lot = "0.13.0"
+crossbeam-channel = "0.5.17"
+lru = "0.19.0"
+bloomfilter = "3.0.2"
+uuid = { version = "1.29.3", features = ["v4"] }
+chrono = { version = "0.4.45", features = ["serde"] }
+once_cell = "1.21.4"
+# io / compression
+flate2 = "1.1"
+memmap2 = "0.9.12"
+fs2 = "0.4.3"
+zstd = "0.14.4"
+snap = "1.1.2"
+# cli
+clap = { version = "4.6.8", features = ["derive", "env"] }
+rpassword = "7.5"
+# bindings
+napi = { version = "3.16.2", features = ["tokio_rt"] }
+napi-derive = "3.7.1"
+pyo3 = { version = "0.30.1", features = ["extension-module"] }
+# M2: types / text / geo
+bcrypt = "0.19.3"
+bigdecimal = "0.4.11"
+blake2 = "0.11.0"
+geo-types = "0.7.20"
+geojson = "1.0.0"
+num-bigint = "0.4"
+num-traits = "0.2.19"
+icu_collator = { version = "2.4.0", features = ["compiled_data"] }
+icu_locale_core = { version = "2.4.0", features = ["alloc"] }
+porter-stemmer = "0.1.2"
+rust-stemmers = "1.2.0"
+ryu = "1.0.23"
+s2 = "0.2.0"
+unicode-normalization = "0.1.26"
+unicode-segmentation = "1.13.3"
+wkb = "0.9.3"
+# dev / test
+criterion = "0.8.2"
+rstest = "0.28.0"
+insta = "1.49.0"
+tempfile = "3.27.0"
+
+# internal crates
+datastreamdb-core = { path = "crates/datastreamdb-core", version = "0.1.0" }
+datastreamdb-x = { path = "crates/datastreamdb-x", version = "0.1.0" }
+datastreamdb-lex = { path = "crates/datastreamdb-lex", version = "0.1.0" }
+datastreamdb-types = { path = "crates/datastreamdb-types", version = "0.1.0" }
+datastreamdb-codec = { path = "crates/datastreamdb-codec", version = "0.1.0" }
+datastreamdb-algo = { path = "crates/datastreamdb-algo", version = "0.1.0" }
+datastreamdb-tok = { path = "crates/datastreamdb-tok", version = "0.1.0" }
+datastreamdb-chunker = { path = "crates/datastreamdb-chunker", version = "0.1.0" }
+datastreamdb-schema = { path = "crates/datastreamdb-schema", version = "0.1.0" }
+datastreamdb-dql = { path = "crates/datastreamdb-dql", version = "0.1.0" }
+datastreamdb-graphql = { path = "crates/datastreamdb-graphql", version = "0.1.0" }
+datastreamdb-posting = { path = "crates/datastreamdb-posting", version = "0.1.0" }
+datastreamdb-xidmap = { path = "crates/datastreamdb-xidmap", version = "0.1.0" }
+datastreamdb-task = { path = "crates/datastreamdb-task", version = "0.1.0" }
+datastreamdb-query = { path = "crates/datastreamdb-query", version = "0.1.0" }
+datastreamdb-worker = { path = "crates/datastreamdb-worker", version = "0.1.0" }
+datastreamdb-frontend = { path = "crates/datastreamdb-frontend", version = "0.1.0" }
+datastreamdb-raft = { path = "crates/datastreamdb-raft", version = "0.1.0" }
+datastreamdb-proto = { path = "crates/datastreamdb-proto", version = "0.1.0" }
+datastreamdb-acl = { path = "crates/datastreamdb-acl", version = "0.1.0" }
+datastreamdb-audit = { path = "crates/datastreamdb-audit", version = "0.1.0" }
+datastreamdb-enc = { path = "crates/datastreamdb-enc", version = "0.1.0" }
+datastreamdb-backup = { path = "crates/datastreamdb-backup", version = "0.1.0" }
+datastreamdb-filestore = { path = "crates/datastreamdb-filestore", version = "0.1.0" }
+datastreamdb-store = { path = "crates/datastreamdb-store", version = "0.1.0" }
+datastreamdb-server = { path = "crates/datastreamdb-server", version = "0.1.0" }
+datastreamdb-ffi = { path = "crates/datastreamdb-ffi", version = "0.1.0" }
+datastreamdb-loader = { path = "crates/datastreamdb-loader", version = "0.1.0" }
+
+[workspace.lints.rust]
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.release]
+lto = "thin"
+codegen-units = 16

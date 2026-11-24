@@ -1,0 +1,46 @@
+[package]
+name = "datastreamdb-frontend"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Request orchestration: HTTP/gRPC serving, auth, admin."
+documentation = "https://docs.rs/datastreamdb-frontend"
+
+[dependencies]
+async-graphql.workspace = true
+async-trait.workspace = true
+axum.workspace = true
+bytes.workspace = true
+datastreamdb-acl.workspace = true
+datastreamdb-audit.workspace = true
+datastreamdb-chunker.workspace = true
+datastreamdb-dql.workspace = true
+datastreamdb-graphql.workspace = true
+datastreamdb-posting.workspace = true
+datastreamdb-proto.workspace = true
+datastreamdb-query.workspace = true
+datastreamdb-raft.workspace = true
+datastreamdb-schema.workspace = true
+datastreamdb-store.workspace = true
+datastreamdb-task.workspace = true
+datastreamdb-tok.workspace = true
+datastreamdb-types.workspace = true
+datastreamdb-worker.workspace = true
+datastreamdb-x.workspace = true
+futures.workspace = true
+openraft.workspace = true
+prost.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tonic.workspace = true
+tower.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

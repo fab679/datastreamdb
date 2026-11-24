@@ -1,0 +1,13 @@
+[package]
+name = "datastreamdb-lex"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Low-level lexing primitives (IRIs, RDF atoms)."
+documentation = "https://docs.rs/datastreamdb-lex"
+
+[dependencies]
+thiserror.workspace = true
+[lints]
+workspace = true

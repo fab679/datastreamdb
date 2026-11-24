@@ -1,0 +1,12 @@
+# Placeholder compose for future zero+alpha interop runs (M5).
+# Images do not exist yet; see compose/TODO.md.
+services:
+  zero:
+    image: datastreamdb/zero:dev
+    command: ["zero", "--bind", "0.0.0.0:5080"]
+    ports: ["5080:5080"]
+  alpha:
+    image: datastreamdb/alpha:dev
+    command: ["alpha", "--zero", "zero:5080", "--bind", "0.0.0.0:8080"]
+    ports: ["8080:8080", "9080:9080"]
+    depends_on: ["zero"]

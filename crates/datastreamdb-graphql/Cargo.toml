@@ -1,0 +1,33 @@
+[package]
+name = "datastreamdb-graphql"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "GraphQL layer: schema-gen, auth, resolve, subscribe."
+documentation = "https://docs.rs/datastreamdb-graphql"
+
+[dependencies]
+async-graphql.workspace = true
+async-graphql-parser.workspace = true
+async-graphql-value.workspace = true
+async-trait.workspace = true
+datastreamdb-dql.workspace = true
+datastreamdb-proto.workspace = true
+futures.workspace = true
+datastreamdb-query.workspace = true
+jsonwebtoken.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+datastreamdb-posting.workspace = true
+datastreamdb-schema.workspace = true
+datastreamdb-store.workspace = true
+
+[lints]
+workspace = true

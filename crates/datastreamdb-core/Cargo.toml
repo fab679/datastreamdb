@@ -1,0 +1,25 @@
+[package]
+name = "datastreamdb-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Embeddable multi-instance engine facade: open, query, mutate, close."
+documentation = "https://docs.rs/datastreamdb-core"
+
+[features]
+default = ["fjall"]
+fjall = ["datastreamdb-store/fjall"]
+
+[dependencies]
+datastreamdb-store.workspace = true
+datastreamdb-types.workspace = true
+parking_lot.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+
+[lints]
+workspace = true

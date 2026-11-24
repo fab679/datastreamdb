@@ -1,0 +1,2 @@
+# Clippy configuration. MSRV must match `rust-version` in the workspace Cargo.toml.
+msrv = "1.85"

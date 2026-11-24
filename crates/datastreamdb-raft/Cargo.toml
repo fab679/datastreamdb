@@ -1,0 +1,33 @@
+[package]
+name = "datastreamdb-raft"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Consensus, WAL, membership, and internode transport."
+documentation = "https://docs.rs/datastreamdb-raft"
+
+[dependencies]
+bytes.workspace = true
+datastreamdb-proto.workspace = true
+futures.workspace = true
+memmap2.workspace = true
+openraft = { workspace = true, features = ["serde"] }
+prost.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tonic.workspace = true
+tonic-prost.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[build-dependencies]
+prost-build.workspace = true
+tonic-build.workspace = true
+tonic-prost-build.workspace = true
+
+[lints]
+workspace = true

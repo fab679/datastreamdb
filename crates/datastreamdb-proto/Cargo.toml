@@ -1,0 +1,22 @@
+[package]
+name = "datastreamdb-proto"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Protobuf message definitions (prost) shared by all crates."
+documentation = "https://docs.rs/datastreamdb-proto"
+
+[dependencies]
+prost.workspace = true
+thiserror.workspace = true
+tonic.workspace = true
+tonic-prost.workspace = true
+
+[build-dependencies]
+prost-build.workspace = true
+tonic-build.workspace = true
+tonic-prost-build.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,31 @@
+[package]
+name = "datastreamdb-loader"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Bulk and live data loaders: RDF/JSON ingest into engines."
+documentation = "https://docs.rs/datastreamdb-loader"
+
+[dependencies]
+datastreamdb-chunker.workspace = true
+datastreamdb-dql.workspace = true
+datastreamdb-enc.workspace = true
+datastreamdb-filestore.workspace = true
+datastreamdb-lex.workspace = true
+datastreamdb-posting.workspace = true
+datastreamdb-proto.workspace = true
+datastreamdb-schema.workspace = true
+datastreamdb-store.workspace = true
+datastreamdb-tok.workspace = true
+datastreamdb-types.workspace = true
+datastreamdb-x.workspace = true
+datastreamdb-xidmap.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

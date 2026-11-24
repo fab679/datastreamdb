@@ -1,0 +1,26 @@
+/target/
+# NOTE: Cargo.lock is tracked on purpose (reproducible server/binary builds).
+**/target/
+node_modules/
+dist/
+*.node
+*.so
+*.dylib
+*.dll
+*.pyc
+__pycache__/
+.pytest_cache/
+.venv/
+*.profraw
+*.profdata
+coverage/
+.DS_Store
+.idea/
+.vscode/
+*.log
+.datastreamdb-dev/
+site/
+.cache/
+# Upstream Go checkout (reference only; never renamed or committed).
+dgraph-main/
+dgraph-main.zip

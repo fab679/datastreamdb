@@ -1,0 +1,28 @@
+[package]
+name = "datastreamdb-task"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Local query task processor (single-group worker/task port)."
+documentation = "https://docs.rs/datastreamdb-task"
+
+[dependencies]
+bytes.workspace = true
+prost.workspace = true
+regex.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+datastreamdb-algo.workspace = true
+datastreamdb-codec.workspace = true
+datastreamdb-posting.workspace = true
+datastreamdb-proto.workspace = true
+datastreamdb-schema.workspace = true
+datastreamdb-store.workspace = true
+datastreamdb-tok.workspace = true
+datastreamdb-types.workspace = true
+datastreamdb-x.workspace = true
+
+[lints]
+workspace = true

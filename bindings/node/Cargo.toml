@@ -1,0 +1,19 @@
+[package]
+name = "datastreamdb-node"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "TypeScript bindings for datastreamdb (Node-API)."
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+datastreamdb-core.workspace = true
+napi.workspace = true
+napi-derive.workspace = true
+
+[lints]
+workspace = true

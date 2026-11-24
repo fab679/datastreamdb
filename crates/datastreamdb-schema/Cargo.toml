@@ -1,0 +1,20 @@
+[package]
+name = "datastreamdb-schema"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Schema model, parser, and live schema state."
+documentation = "https://docs.rs/datastreamdb-schema"
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true
+datastreamdb-lex.workspace = true
+datastreamdb-types.workspace = true
+datastreamdb-tok.workspace = true
+datastreamdb-x.workspace = true
+datastreamdb-proto.workspace = true
+
+[lints]
+workspace = true

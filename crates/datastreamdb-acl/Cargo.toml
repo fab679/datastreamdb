@@ -1,0 +1,26 @@
+[package]
+name = "datastreamdb-acl"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Access control: JWT auth, HMAC secrets, rules."
+documentation = "https://docs.rs/datastreamdb-acl"
+
+[dependencies]
+base64.workspace = true
+datastreamdb-proto.workspace = true
+ed25519-dalek = { workspace = true, features = ["pem", "pkcs8"] }
+elliptic-curve.workspace = true
+jsonwebtoken.workspace = true
+pkcs8.workspace = true
+p256 = { workspace = true, features = ["pem", "pkcs8"] }
+p384 = { workspace = true, features = ["pem", "pkcs8"] }
+rsa.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+
+[lints]
+workspace = true

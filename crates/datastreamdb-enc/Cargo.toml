@@ -1,0 +1,18 @@
+[package]
+name = "datastreamdb-enc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Encryption at rest helpers (AES-CTR streams, key rotation)."
+documentation = "https://docs.rs/datastreamdb-enc"
+
+[dependencies]
+aes.workspace = true
+ctr.workspace = true
+getrandom.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,45 @@
+[package]
+name = "datastreamdb-worker"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Tablet serving: predicates, mutations, backup, CDC."
+documentation = "https://docs.rs/datastreamdb-worker"
+
+[dependencies]
+base64.workspace = true
+bytes.workspace = true
+chrono.workspace = true
+datastreamdb-acl.workspace = true
+datastreamdb-backup.workspace = true
+datastreamdb-codec.workspace = true
+datastreamdb-enc.workspace = true
+datastreamdb-filestore.workspace = true
+datastreamdb-posting.workspace = true
+datastreamdb-proto.workspace = true
+datastreamdb-query.workspace = true
+datastreamdb-raft.workspace = true
+datastreamdb-schema.workspace = true
+datastreamdb-store.workspace = true
+datastreamdb-task.workspace = true
+datastreamdb-types.workspace = true
+datastreamdb-x.workspace = true
+flate2.workspace = true
+futures.workspace = true
+openraft = { workspace = true, features = ["serde"] }
+parking_lot.workspace = true
+prost.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tonic.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+axum.workspace = true
+tempfile.workspace = true
+
+[lints]
+workspace = true

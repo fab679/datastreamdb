@@ -1,0 +1,29 @@
+[package]
+name = "datastreamdb-chunker"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Bulk ingest: RDF N-Quads and JSON chunkers."
+documentation = "https://docs.rs/datastreamdb-chunker"
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+datastreamdb-lex.workspace = true
+datastreamdb-types.workspace = true
+datastreamdb-tok.workspace = true
+datastreamdb-x.workspace = true
+datastreamdb-proto.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+chrono.workspace = true
+
+[[bench]]
+name = "parse"
+harness = false
+
+[lints]
+workspace = true

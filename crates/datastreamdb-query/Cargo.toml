@@ -1,0 +1,33 @@
+[package]
+name = "datastreamdb-query"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Embedded DQL query executor and mutation applier."
+documentation = "https://docs.rs/datastreamdb-query"
+
+[dependencies]
+bigdecimal.workspace = true
+chrono.workspace = true
+geojson.workspace = true
+prost.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+datastreamdb-algo.workspace = true
+datastreamdb-chunker.workspace = true
+datastreamdb-codec.workspace = true
+datastreamdb-dql.workspace = true
+datastreamdb-posting.workspace = true
+datastreamdb-proto.workspace = true
+datastreamdb-schema.workspace = true
+datastreamdb-store.workspace = true
+datastreamdb-task.workspace = true
+datastreamdb-tok.workspace = true
+datastreamdb-types.workspace = true
+datastreamdb-x.workspace = true
+
+[lints]
+workspace = true

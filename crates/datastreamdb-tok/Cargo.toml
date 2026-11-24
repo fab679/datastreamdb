@@ -1,0 +1,31 @@
+[package]
+name = "datastreamdb-tok"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Tokenizers for scalar and full-text indexing."
+documentation = "https://docs.rs/datastreamdb-tok"
+
+[dependencies]
+blake2.workspace = true
+chrono.workspace = true
+datastreamdb-types.workspace = true
+icu_collator.workspace = true
+icu_locale_core.workspace = true
+rust-stemmers.workspace = true
+serde.workspace = true
+tantivy.workspace = true
+thiserror.workspace = true
+unicode-normalization.workspace = true
+unicode-segmentation.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "term"
+harness = false
+
+[lints]
+workspace = true

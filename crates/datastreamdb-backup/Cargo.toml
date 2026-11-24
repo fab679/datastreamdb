@@ -1,0 +1,30 @@
+[package]
+name = "datastreamdb-backup"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Online backup orchestration and restore."
+documentation = "https://docs.rs/datastreamdb-backup"
+
+[dependencies]
+datastreamdb-codec.workspace = true
+datastreamdb-enc.workspace = true
+datastreamdb-posting.workspace = true
+datastreamdb-chunker.workspace = true
+datastreamdb-proto.workspace = true
+datastreamdb-schema.workspace = true
+datastreamdb-store.workspace = true
+datastreamdb-tok.workspace = true
+datastreamdb-types.workspace = true
+datastreamdb-x.workspace = true
+flate2.workspace = true
+prost.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+snap.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

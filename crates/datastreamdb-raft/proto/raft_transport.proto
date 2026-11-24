@@ -1,0 +1,37 @@
+// openraft transport for DataStreamDB groups (datastreamdb-raft, M5).
+//
+// RPC bodies are JSON-encoded openraft request/response types (openraft's
+// `serde` feature). This keeps the IDL tiny and lets the Rust nodes evolve
+// the transport without touching `pb.proto`; consensus traffic never speaks
+// to Go nodes (etcd raft vs openraft are different protocols), so no
+// cross-implementation wire compat is required here.
+
+syntax = "proto3";
+
+package rafttransport;
+
+service RaftTransport {
+  rpc Vote (Envelope) returns (Envelope);
+  rpc PreVote (Envelope) returns (Envelope);
+  rpc AppendEntries (Envelope) returns (Envelope);
+  rpc InstallSnapshot (stream SnapshotFrame) returns (Envelope);
+}
+
+// One JSON-encoded openraft RPC body.
+message Envelope {
+  bytes json = 1;
+}
+
+// One snapshot frame: a header first, then data chunks.
+message SnapshotFrame {
+  oneof frame {
+    SnapshotHeader header = 1;
+    bytes chunk = 2;
+  }
+}
+
+// Snapshot metadata: JSON-encoded vote + snapshot meta.
+message SnapshotHeader {
+  bytes vote_json = 1;
+  bytes meta_json = 2;
+}

@@ -1,0 +1,26 @@
+// Partial mirror of github.com/dgraph-io/badger/v4/pb/pb.proto (package
+// badgerpb4). Only the messages `pb.proto` references (KV, KVList, Match)
+// and only their low, long-stable field numbers are mirrored. Higher tags
+// are intentionally omitted: protobuf unknown-field skipping keeps decoding
+// Go-sent payloads safe, and M5 never emits these types on interop paths
+// (Subscribe streaming and Proposal.kv are out of embedded scope).
+// This file feeds prost/tonic codegen (see build.rs).
+
+syntax = "proto3";
+
+package badgerpb4;
+
+message KV {
+  bytes key = 1;
+  bytes value = 2;
+  bytes user_meta = 3;
+  uint64 version = 4;
+}
+
+message KVList {
+  repeated KV kv = 1;
+}
+
+message Match {
+  bytes prefix = 1;
+}

@@ -1,0 +1,68 @@
+site_name: DataStreamDB
+site_description: Embeddable DataStreamDB in Rust — in-process multi-instance graph database with TypeScript, Python, and C bindings.
+site_author: datastreamdb contributors
+docs_dir: site-docs
+# Repo-convention notes live alongside the pages but stay unpublished.
+exclude_docs: |
+  README.md
+  TODO.md
+  */README.md
+  */TODO.md
+# Set repo_url + repo_name before publishing (repository URL still open).
+# repo_url: https://github.com/ORG/datastreamdb
+# repo_name: datastreamdb
+theme:
+  name: material
+  features:
+    - navigation.top
+    - navigation.footer
+    - navigation.sections
+    - content.code.copy
+    - search.suggest
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+plugins:
+  - search
+markdown_extensions:
+  - admonition
+  - tables
+  - fenced_code
+  - codehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Tutorial: tutorial.md
+  - Concepts: concepts.md
+  - Embedding:
+      - embedding/index.md
+      - embedding/rust.md
+      - embedding/typescript.md
+      - embedding/python.md
+      - embedding/c.md
+  - DQL guide: dql.md
+  - GraphQL: graphql.md
+  - HTTP API: http-api.md
+  - Admin API: admin.md
+  - Security: security.md
+  - Backups & export: backups.md
+  - Tenancy: tenancy.md
+  - Operations: operations.md
+  - Architecture: architecture.md
+  - Troubleshooting: troubleshooting.md
+  - Changelog: changelog.md
+  - Limitations: limitations.md

@@ -1,0 +1,19 @@
+[package]
+name = "datastreamdb-py"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Python bindings for datastreamdb (pyo3/maturin)."
+publish = false
+
+[lib]
+name = "datastreamdb_py"
+crate-type = ["cdylib"]
+
+[dependencies]
+datastreamdb-core.workspace = true
+pyo3.workspace = true
+
+[lints]
+workspace = true

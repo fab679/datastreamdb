@@ -1,0 +1,21 @@
+[package]
+name = "datastreamdb-dql"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "DQL (GraphQL+-) lexer, parser, and AST."
+documentation = "https://docs.rs/datastreamdb-dql"
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true
+datastreamdb-lex.workspace = true
+datastreamdb-types.workspace = true
+datastreamdb-tok.workspace = true
+datastreamdb-x.workspace = true
+datastreamdb-proto.workspace = true
+datastreamdb-chunker.workspace = true
+
+[lints]
+workspace = true

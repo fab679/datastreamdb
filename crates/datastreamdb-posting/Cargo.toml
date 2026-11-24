@@ -1,0 +1,27 @@
+[package]
+name = "datastreamdb-posting"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Posting lists: MVCC lists over the storage backend."
+documentation = "https://docs.rs/datastreamdb-posting"
+
+[dependencies]
+bytes.workspace = true
+lru.workspace = true
+parking_lot.workspace = true
+prost.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+datastreamdb-algo.workspace = true
+datastreamdb-codec.workspace = true
+datastreamdb-proto.workspace = true
+datastreamdb-schema.workspace = true
+datastreamdb-store.workspace = true
+datastreamdb-tok.workspace = true
+datastreamdb-types.workspace = true
+datastreamdb-x.workspace = true
+
+[lints]
+workspace = true
