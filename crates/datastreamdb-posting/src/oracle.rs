@@ -84,6 +84,9 @@ impl Oracle {
     }
 
     /// Raises the clock to at least `ts` (restore replays old versions).
+    // `fetch_update` was renamed to `try_update` in Rust 1.97; keep the
+    // old spelling so the workspace MSRV (1.85) still builds.
+    #[allow(deprecated)]
     pub fn advance_to(&self, ts: u64) {
         let _ = self
             .max_assigned

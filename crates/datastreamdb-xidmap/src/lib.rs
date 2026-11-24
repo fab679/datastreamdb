@@ -62,6 +62,9 @@ impl XidMap {
 
     /// Raises the allocation floor above `uid` (Go `alloc.BumpTo`):
     /// later assignments never reuse an explicit UID at or below it.
+    // `fetch_update` was renamed to `try_update` in Rust 1.97; keep the
+    // old spelling so the workspace MSRV (1.85) still builds.
+    #[allow(deprecated)]
     pub fn bump_to(&self, uid: u64) {
         let _ = self
             .next
