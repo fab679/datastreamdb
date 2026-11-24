@@ -1,7 +1,7 @@
 {
   "name": "@datastreamdb/core",
   "version": "0.1.0",
-  "description": "Embedded multi-instance graph database (DataStreamDB port) for Node.js",
+  "description": "Embedded multi-instance graph database for Node.js",
   "license": "Apache-2.0",
   "main": "index.js",
   "types": "index.d.ts",
