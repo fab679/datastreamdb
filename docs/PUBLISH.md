@@ -6,8 +6,10 @@ verify with `cargo package --workspace --offline --allow-dirty`
 
 ## Prerequisites
 
-- [ ] Repository URL decided; add `repository = "..."` to
-  `[workspace.package]` in `Cargo.toml` (blocked: no URL yet).
+- [x] Repository URL decided: `https://github.com/fab679/datastreamdb`.
+  Add `repository = "..."` to `[workspace.package]` and
+  `repository.workspace = true` to each crate before the next crates.io
+  release (0.1.0 was published before the repository existed).
 - [ ] Working tree committed (`cargo package` needs `--allow-dirty`
   until then; `cargo publish` does not check git status, but release
   from a clean tag).

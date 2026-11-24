@@ -1,5 +1,10 @@
 # DataStreamDB
 
+[Documentation](https://fab679.github.io/datastreamdb/) ·
+[npm](https://www.npmjs.com/package/@datastreamdb/core) ·
+[PyPI](https://pypi.org/project/datastreamdb/) ·
+[crates.io](https://crates.io/crates/datastreamdb-core)
+
 DataStreamDB is an embeddable graph database in Rust, ported from the
 original Go implementation ([dgraph-io/dgraph](https://github.com/dgraph-io/dgraph))
 and designed from day one to be **embedded**: any application can spin up
@@ -37,12 +42,24 @@ cargo clippy --workspace --all-targets -- -D warnings
 Open two isolated instances in Rust:
 
 ```rust
-let a = datastreamdb_core::Instance::open("{\"data_dir\": null}".parse()?)?;
-let b = datastreamdb_core::Instance::open("{\"data_dir\": \"/tmp/instance-b\"}".parse()?)?;
-a.put("name", b"Ada")?;
-assert_eq!(a.get("name")?.as_deref(), Some(b"Ada".as_slice()));
-assert_eq!(b.get("name")?, None); // isolated
+use datastreamdb_core::{Instance, InstanceConfig};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let a = Instance::open(InstanceConfig::memory())?;
+    let b = Instance::open(InstanceConfig::from_json(
+        r#"{"data_dir": "/tmp/instance-b"}"#,
+    )?)?;
+
+    a.put("name", b"Ada")?;
+    assert_eq!(a.get("name")?.as_deref(), Some(b"Ada".as_slice()));
+    assert_eq!(b.get("name")?, None); // isolated
+    Ok(())
+}
 ```
+
+> **0.1.0 scope:** embedded instances expose key/value operations
+> (`put`/`get`/`delete`/`scan`/`batch`/`flush`). DQL and GraphQL run against
+> the standalone servers. See the [embedded developer guide](https://fab679.github.io/datastreamdb/embedding/).
 
 TypeScript and Python quickstarts live in [`bindings/node`](bindings/node/README.md) and
 [`bindings/python`](bindings/python/README.md).
