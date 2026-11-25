@@ -93,8 +93,8 @@ on Linux).
 
 ## Checklist
 
-- [ ] `cargo publish` loop green (28 crates, in order above)
+- [x] `cargo publish` loop green (28 crates, in order above)
 - [ ] `npm publish` green (`@datastreamdb/core@0.2.1`)
-- [ ] `maturin publish` green (`datastreamdb==0.2.1`)
-- [ ] GitHub release `v0.2.1` with the C assets attached
-- [ ] Tag: `git tag v0.2.1 && git push origin v0.2.1`
+- [x] `maturin publish` green (`datastreamdb==0.2.1`)
+- [x] GitHub release `v0.2.1` with the C assets attached
+- [x] Tag: `git tag v0.2.1 && git push origin v0.2.1`
