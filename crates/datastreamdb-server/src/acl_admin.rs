@@ -322,7 +322,16 @@ impl AclAdmin {
             )
             .expect("format to string");
         }
-        self.mutate("", &del, &format!("delete {userid:?}")).await
+        self.mutate("", &del, &format!("delete {userid:?}")).await?;
+        for _ in 0..20 {
+            if self.user(userid).await?.is_none() {
+                return Ok(());
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+        }
+        Err(AdminError::Rpc(format!(
+            "user {userid:?} is still visible after delete"
+        )))
     }
 
     /// Deletes a group, its rules, and member links (Go `userOrGroupDel`).
@@ -354,7 +363,17 @@ impl AclAdmin {
             )
             .expect("format to string");
         }
-        self.mutate("", &del, &format!("delete {groupid:?}")).await
+        self.mutate("", &del, &format!("delete {groupid:?}"))
+            .await?;
+        for _ in 0..20 {
+            if self.group(groupid).await?.is_none() {
+                return Ok(());
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+        }
+        Err(AdminError::Rpc(format!(
+            "group {groupid:?} is still visible after delete"
+        )))
     }
 
     /// Lists a group's rule uids (uid, predicate).
