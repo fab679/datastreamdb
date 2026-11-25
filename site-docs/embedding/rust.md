@@ -166,3 +166,11 @@ for worker in workers {
 
 `Instance` is `Send + Sync`. Use `Arc` clones rather than opening the same
 persistent directory twice; the second open fails on the file lock.
+
+## Limitations in 0.1.0
+
+- Embedded mode is key/value only. DQL and GraphQL run against the standalone
+  servers.
+- Prefix scans are bounded and have no continuation cursor.
+- The JSON envelope is string-only; use the typed `put`/`get` API for binary
+  values.
