@@ -1,70 +1,107 @@
 site_name: DataStreamDB
-site_description: Embeddable DataStreamDB in Rust — in-process multi-instance graph database with TypeScript, Python, and C bindings.
+site_description: An embeddable graph database for Rust, TypeScript, Python, and C. DQL and GraphQL in-process, or as standalone zero and alpha servers.
 site_author: datastreamdb contributors
 docs_dir: site-docs
+edit_uri: edit/master/site-docs/
 # Repo-convention notes live alongside the pages but stay unpublished.
 exclude_docs: |
   README.md
   TODO.md
   */README.md
   */TODO.md
+# Kept as a landing page for the pre-0.3 tutorial URL.
+not_in_nav: |
+  embedding/tutorials.md
 site_url: https://fab679.github.io/datastreamdb/
 repo_url: https://github.com/fab679/datastreamdb
 repo_name: fab679/datastreamdb
 theme:
   name: material
+  custom_dir: overrides
+  logo: assets/mark.svg
+  favicon: assets/favicon.svg
+  font: false
+  language: en
   features:
     - navigation.top
     - navigation.footer
     - navigation.sections
+    - navigation.tracking
+    - content.action.edit
     - content.code.copy
     - search.suggest
   palette:
-    - scheme: default
-      primary: indigo
-      accent: indigo
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
-    - scheme: slate
-      primary: indigo
-      accent: indigo
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
 plugins:
   - search
+extra_css:
+  - assets/styles.css
+extra_javascript:
+  - assets/home.js
 markdown_extensions:
   - admonition
+  - attr_list
+  - md_in_html
   - tables
-  - fenced_code
-  - codehilite
-  - pymdownx.tabbed:
-      alternate_style: true
   - toc:
       permalink: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
 nav:
   - Home: index.md
-  - Quickstart: quickstart.md
-  - Tutorial: tutorial.md
-  - Concepts: concepts.md
+  - Get started:
+      - Quickstart: get-started/quickstart.md
+      - Movie graph walkthrough: get-started/walkthrough.md
+  - Concepts:
+      - Overview: concepts/index.md
+      - Instances: concepts/instances.md
+      - Predicates and schema: concepts/schema.md
+      - Relationships and facets: concepts/relationships.md
+      - Timestamps and transactions: concepts/transactions.md
+      - Namespaces and sharding: concepts/namespaces.md
+  - Tutorials:
+      - Overview: tutorials/index.md
+      - Movies with DQL: tutorials/movies-dql.md
+      - Movies with GraphQL: tutorials/movies-graphql.md
+      - TODO with DQL: tutorials/todo-dql.md
+      - TODO with GraphQL: tutorials/todo-graphql.md
+      - Orders with DQL: tutorials/orders-dql.md
   - Embedding:
-      - embedding/index.md
-      - embedding/rust.md
-      - embedding/typescript.md
-      - embedding/python.md
-      - embedding/c.md
-      - DQL & GraphQL: embedding/queries.md
-      - Tutorials: embedding/tutorials.md
-  - DQL guide: dql.md
-  - GraphQL: graphql.md
-  - HTTP API: http-api.md
-  - Admin API: admin.md
-  - Security: security.md
-  - Backups & export: backups.md
-  - Tenancy: tenancy.md
-  - Operations: operations.md
-  - Architecture: architecture.md
-  - Troubleshooting: troubleshooting.md
-  - Changelog: changelog.md
-  - Limitations: limitations.md
+      - Overview: embedding/index.md
+      - Rust: embedding/rust.md
+      - TypeScript: embedding/typescript.md
+      - Python: embedding/python.md
+      - C: embedding/c.md
+      - DQL and GraphQL reference: embedding/queries.md
+  - Guides:
+      - DQL: guides/dql.md
+      - GraphQL: guides/graphql.md
+      - HTTP API: guides/http-api.md
+      - Admin API: guides/admin.md
+      - Security: guides/security.md
+      - Backups and export: guides/backups.md
+      - Tenancy: guides/tenancy.md
+      - Operations: guides/operations.md
+      - Troubleshooting: guides/troubleshooting.md
+  - Reference:
+      - Architecture: reference/architecture.md
+      - Limitations: reference/limitations.md
+      - Changelog: reference/changelog.md

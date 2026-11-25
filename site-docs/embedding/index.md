@@ -1,3 +1,7 @@
+---
+title: Embedding overview
+---
+
 # Embedding overview
 
 Every embedding goes through an opaque instance handle. Handles are
@@ -31,7 +35,7 @@ release. Flush explicitly first when durability matters.
 !!! note "Graph mode is single-node"
     Embedded DQL/GraphQL runs locally with the same executor as the standalone
     server. Use the standalone servers for clustering, ACL, namespaces, and
-    WebSocket subscriptions. See [DQL & GraphQL](queries.md) for relationship,
+    WebSocket subscriptions. See [DQL and GraphQL](queries.md) for relationship,
     pattern, schema, mutation, and subscription examples.
 
 ## Configuration
@@ -57,8 +61,11 @@ fast on version skew.
 
 ## Data model and supported types
 
-The embedded engine is a partition-scoped ordered key/value store. Graph
-documents, indexes, and DQL are handled by the standalone server layers.
+The embedded engine exposes two independent surfaces: a partition-scoped
+ordered key/value store, and a graph engine running the same DQL executor and
+GraphQL layer as the standalone servers. The key/value table below covers the
+first; the graph surface is described in [DQL and GraphQL](queries.md) and the
+shared data model in [Concepts](../concepts/index.md).
 
 | Item | Supported form | Notes |
 |---|---|---|

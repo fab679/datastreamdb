@@ -36,7 +36,6 @@ type Person {
 }
 type Genre {
  name
- movies
 }
 ",
     )
@@ -143,14 +142,12 @@ type Task {
 }
 type Project {
  name
- tasks
 }
 type Tag {
  name
 }
 type Person {
  name
- assigned
 }
 ",
     )
@@ -235,7 +232,6 @@ ordered: [uid] @reverse .
 type Customer {
  name
  email
- orders
 }
 type Product {
  name

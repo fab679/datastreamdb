@@ -2,10 +2,10 @@
 
 Status in 0.2.0: the GraphQL engine ships as a library
 (`datastreamdb-graphql`) and is exposed through embedded instances
-(`setGraphqlSchema` / `graphql` / `graphqlSubscribe`). The standalone
-server still has no public `/graphql` route — only the
-[Admin API](admin.md) speaks GraphQL over HTTP today. See
-[DQL & GraphQL](embedding/queries.md) for embedded examples.
+(`set_graphql_schema` / `graphql` / `graphql_subscribe`). The standalone
+server has no public `/graphql` route — the
+[Admin API](admin.md) speaks GraphQL over HTTP. See
+[DQL and GraphQL](../embedding/queries.md) for embedded examples.
 
 What the crates do:
 
@@ -16,8 +16,8 @@ What the crates do:
   rule evaluation for queries.
 - **Resolvers**: GraphQL operations rewrite to DQL and execute
   against `datastreamdb-query` (queries, mutations with conditions).
-- **Subscriptions**: a poll-based hub core. The websocket
-  transport is deferred, so nothing serves subscriptions yet.
+- **Subscriptions**: a poll-based hub. Embedded instances expose it as a
+  handle (`graphql_subscribe` / `graphql_next`); the WebSocket transport is
+  not implemented.
 
-Rustdoc on `datastreamdb-graphql` is the API reference. Serving the data
-layer over HTTP/websocket is tracked for 0.2.0.
+Rustdoc on `datastreamdb-graphql` is the API reference.

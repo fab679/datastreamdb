@@ -3,7 +3,7 @@
 DQL (the graph query language) over [HTTP](http-api.md): schema in
 `POST /alter`, reads in `POST /query`, writes in `POST /mutate`.
 This page covers the core; the full language follows the upstream
-semantics, and anything in [Limitations](limitations.md) is not
+semantics, and anything in [Limitations](../reference/limitations.md) is not
 implemented.
 
 ## Schema

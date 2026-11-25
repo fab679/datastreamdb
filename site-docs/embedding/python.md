@@ -36,7 +36,10 @@ print(persistent.id(), persistent.backend()) # uuid, "fjall"
 db.dql_alter("""
 name: string @index(exact) .
 friend: [uid] @reverse .
-type Person { name friend }
+type Person {
+  name
+  friend
+}
 """)
 db.dql_mutate('{ set { _:a <name> "Ada" . _:b <name> "Bob" . _:a <friend> _:b . } }')
 print(db.dql_query('{ people(func: eq(name, "Ada")) { name friend { name } } }'))

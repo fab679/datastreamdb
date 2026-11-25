@@ -1,0 +1,182 @@
+{% extends 'main.html' %}
+
+{% block site_nav %}{% endblock %}
+
+{% block container %}
+<div class="md-content home-shell">
+  <div class="home">
+
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__copy">
+        <h1 id="hero-title">A graph database inside your process.</h1>
+        <p class="hero__lede">DQL and GraphQL, embedded in Rust, TypeScript, Python, or C.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="{{ 'embedding/' | url }}">Start embedded</a>
+          <a class="btn btn--quiet" href="{{ 'get-started/quickstart/' | url }}">Run the servers</a>
+        </div>
+        <div class="install" aria-label="Rust install command">
+          <code>cargo add datastreamdb-core</code>
+          <button class="install__copy" type="button" data-copy="cargo add datastreamdb-core">Copy</button>
+        </div>
+      </div>
+
+      <div class="hero__figure">
+        <div class="modes" role="group" aria-label="Deployment mode">
+          <button type="button" class="modes__btn" data-mode="embedded" aria-pressed="true">embedded</button>
+          <button type="button" class="modes__btn" data-mode="standalone" aria-pressed="false">standalone</button>
+        </div>
+
+        <figure class="boundary" data-mode="embedded" aria-labelledby="boundary-caption">
+          <div class="boundary__canvas">
+            <div class="proc">
+              <span class="proc__label">your process</span>
+              <div class="app">your app</div>
+              <div class="client">HTTP client</div>
+              <div class="inst">
+                <span class="inst__label">Instance</span>
+                <div class="stack">
+                  <span class="stack__line"><span>DQL</span><span>GraphQL</span></span>
+                  <span class="stack__flow">query/posting/store</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="wire" aria-hidden="true">
+              <span class="wire__label wire__label--embedded">no network</span>
+              <span class="wire__label wire__label--standalone">HTTP / gRPC</span>
+            </div>
+
+            <div class="cluster">
+              <span class="cluster__label">cluster</span>
+              <div class="node-box">zero<span>tablet map</span></div>
+              <div class="node-box">alpha<span>raft group</span></div>
+            </div>
+          </div>
+          <figcaption id="boundary-caption" class="boundary__caption">
+            <span class="cap cap--embedded">One process. No ports, no network, no separate server.</span>
+            <span class="cap cap--standalone">Zero and alpha over HTTP or gRPC when clients share the graph.</span>
+          </figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="engine-title">
+      <div class="band__head">
+        <h2 id="engine-title">One engine, two places to run it</h2>
+        <p>The same schema, query planner, posting store, and GraphQL layer run in both modes. Embedded drops the network, not the engine.</p>
+      </div>
+      <dl class="compare">
+        <div class="compare__row">
+          <dt>Embedded</dt>
+          <dd>An <code>Instance</code> inside your application. No ports, no sidecar, no cluster to operate. Single-node, one writer.</dd>
+        </div>
+        <div class="compare__row">
+          <dt>Standalone</dt>
+          <dd><code>zero</code> and <code>alpha</code> processes over HTTP or gRPC, with raft groups, ACL, and namespaces.</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="band" aria-labelledby="relationships-title">
+      <div class="band__head">
+        <h2 id="relationships-title">Relationships, not foreign keys</h2>
+        <p>Genres are nodes. Cast roles live on the edge. Traverse either direction without a join table.</p>
+      </div>
+      <div class="split-code">
+        <div class="code-block">
+          <span class="code-block__label">schema</span>
+          <pre><code><span class="tok-key">genre</span>: [uid] @reverse .
+<span class="tok-key">acted_in</span>: [uid] @reverse .
+<span class="tok-key">type</span> Movie {
+  name
+  genre
+  acted_in
+}</code></pre>
+        </div>
+        <div class="code-block">
+          <span class="code-block__label">query</span>
+          <pre><code>{
+  movie(func: eq(name, <span class="tok-str">"The Matrix"</span>)) {
+    name
+    genre { name }
+    cast: acted_in @facets(role, billing) { name }
+  }
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" aria-labelledby="bindings-title">
+      <div class="band__head">
+        <h2 id="bindings-title">Start in the language you already have</h2>
+        <p>Four bindings over one Rust core. Each one opens an isolated instance and runs the same DQL.</p>
+      </div>
+      <table class="bindings">
+        <thead>
+          <tr><th scope="col">Binding</th><th scope="col">Install</th><th scope="col">Open</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Rust</th>
+            <td data-label="Install"><code>cargo add datastreamdb-core</code></td>
+            <td data-label="Open"><code>Instance::open(cfg)</code></td>
+          </tr>
+          <tr>
+            <th scope="row">TypeScript</th>
+            <td data-label="Install"><code>npm install @datastreamdb/core</code></td>
+            <td data-label="Open"><code>new Instance('{}')</code></td>
+          </tr>
+          <tr>
+            <th scope="row">Python</th>
+            <td data-label="Install"><code>pip install datastreamdb</code></td>
+            <td data-label="Open"><code>Instance("{}")</code></td>
+          </tr>
+          <tr>
+            <th scope="row">C</th>
+            <td data-label="Install">release archive</td>
+            <td data-label="Open"><code>datastreamdb_open("{}", &amp;h)</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="band band--next" aria-labelledby="next-title">
+      <div class="band__head">
+        <h2 id="next-title">Where to go next</h2>
+      </div>
+      <ul class="next">
+        <li>
+          <a href="{{ 'get-started/quickstart/' | url }}">Quickstart</a>
+          <span>Zero and alpha, schema, data, query, in five minutes.</span>
+        </li>
+        <li>
+          <a href="{{ 'concepts/' | url }}">Concepts</a>
+          <span>Instances, predicates, relationships, transactions, namespaces.</span>
+        </li>
+        <li>
+          <a href="{{ 'tutorials/' | url }}">Tutorials</a>
+          <span>Movies, TODO, and orders, tested end to end.</span>
+        </li>
+        <li>
+          <a href="{{ 'embedding/queries/' | url }}">DQL and GraphQL reference</a>
+          <span>Types, indexes, facets, and poll-based subscriptions.</span>
+        </li>
+      </ul>
+    </section>
+
+    <footer class="home-footer">
+      <span class="home-footer__mark">datastreamdb</span>
+      <nav class="home-footer__links" aria-label="Project links">
+        <a href="https://github.com/fab679/datastreamdb">GitHub</a>
+        <a href="https://crates.io/crates/datastreamdb-core">crates.io</a>
+        <a href="https://www.npmjs.com/package/@datastreamdb/core">npm</a>
+        <a href="https://pypi.org/project/datastreamdb/">PyPI</a>
+      </nav>
+      <span class="home-footer__note"><span>Apache-2.0</span><span>© 2026 datastreamdb contributors</span></span>
+    </footer>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block footer %}{% endblock %}

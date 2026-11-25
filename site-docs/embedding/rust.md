@@ -43,7 +43,10 @@ Embedded 0.2.0 includes the DQL executor and GraphQL layer:
 db.dql_alter(r#"
     name: string @index(exact) .
     friend: [uid] @reverse .
-    type Person { name friend }
+    type Person {
+        name
+        friend
+    }
 "#)?;
 db.dql_mutate(r#"{
     set {

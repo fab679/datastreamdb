@@ -30,4 +30,4 @@ the `X-DataStreamDB-Vars` header as a JSON object.
 Upsert guards ride on `?cond=@if(...)`; blank nodes (`_:a`) come back
 mapped in `data.uids`. Responses always carry an `extensions.txn`
 envelope (`start_ts`, `commit_ts`, `aborted`). See the
-[Quickstart](quickstart.md) for a full round trip.
+[Quickstart](../get-started/quickstart.md) for a full round trip.

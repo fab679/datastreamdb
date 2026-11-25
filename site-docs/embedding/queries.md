@@ -6,7 +6,7 @@ namespaces. Instances are isolated by handle; graph data uses the posting
 partition, while raw `put`/`get` use the separate `default` partition.
 
 For complete movies, TODO, and orders walkthroughs, see
-[Embedded tutorials](tutorials.md).
+[Embedded tutorials](../tutorials/index.md).
 
 ## Schema: optional for scalars, required for relationships/indexes
 
@@ -43,7 +43,11 @@ db.dql_alter(r#"
     name: string @index(exact, term) .
     age: int @index(int) .
     friend: [uid] @reverse .
-    type Person { name age friend }
+    type Person {
+        name
+        age
+        friend
+    }
 "#)?;
 ```
 
@@ -52,7 +56,11 @@ db.dqlAlter(`
   name: string @index(exact, term) .
   age: int @index(int) .
   friend: [uid] @reverse .
-  type Person { name age friend }
+  type Person {
+    name
+    age
+    friend
+  }
 `)
 ```
 
@@ -61,14 +69,18 @@ db.dql_alter("""
 name: string @index(exact, term) .
 age: int @index(int) .
 friend: [uid] @reverse .
-type Person { name age friend }
+type Person {
+  name
+  age
+  friend
+}
 """)
 ```
 
 C uses the envelope:
 
 ```json
-{"op":"dql_alter","schema":"name: string @index(exact) . friend: [uid] @reverse . type Person { name friend }"}
+{"op":"dql_alter","schema":"name: string @index(exact) . friend: [uid] @reverse . type Person { name\nfriend }"}
 ```
 
 ## Relationship data

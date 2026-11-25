@@ -44,11 +44,11 @@ curl -XPOST localhost:8080/admin -d \
   '{"query":"mutation { addNamespace(input: {}) { namespaceId message } }"}'
 ```
 
-See [Admin API](admin.md), [Backups](backups.md), and
-[Tenancy](tenancy.md) for the full surface.
+See [Admin API](../guides/admin.md), [Backups](../guides/backups.md), and
+[Tenancy](../guides/tenancy.md) for the full surface.
 
 ## Next
 
-- [HTTP API](http-api.md) — every endpoint and flag.
-- [Operations](operations.md) — flags, loaders, ACL, audit, CDC.
-- [Embedding](embedding/index.md) — skip the servers entirely.
+- [HTTP API](../guides/http-api.md) — every endpoint and flag.
+- [Operations](../guides/operations.md) — flags, loaders, ACL, audit, CDC.
+- [Embedding](../embedding/index.md) — skip the servers entirely.

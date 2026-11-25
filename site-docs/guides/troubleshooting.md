@@ -47,6 +47,6 @@ or `{"value": null}` (envelope) — not an error.
 
 ## Reporting bugs
 
-Anything outside [Limitations](limitations.md) that misbehaves is a
+Anything outside [Limitations](../reference/limitations.md) that misbehaves is a
 bug. Report the exact command, its full output, and the tails of
 the server logs.

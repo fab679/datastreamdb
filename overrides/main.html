@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block extrahead %}
+  {{ super() }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400..700&family=Azeret+Mono:wght@400..600&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#F1F4F6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#091115" media="(prefers-color-scheme: dark)">
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var scheme = null;
+      try {
+        var scope = new URL("{{ base_url }}", location).pathname;
+        var stored = JSON.parse(localStorage.getItem(scope + ".__palette") || "null");
+        scheme = stored && stored.color && stored.color.scheme;
+      } catch (error) {
+        scheme = null;
+      }
+      if (!scheme) {
+        scheme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "slate"
+          : "default";
+      }
+      root.setAttribute("data-theme", scheme === "slate" ? "dark" : "light");
+    })();
+  </script>
+{% endblock %}

@@ -1,9 +1,8 @@
-# Tutorial: movie graph
+# Movie graph walkthrough
 
-Build a tiny movie database end to end: schema, data, queries,
-upsert, backup. Every command below runs against the
-[Quickstart](quickstart.md) cluster and is tested in CI output form
-against a local zero+alpha.
+Build a tiny movie database end to end: schema, data, queries, variables,
+backup, and delete. Every command runs against the [Quickstart](quickstart.md)
+cluster and is tested in CI against a local zero and alpha.
 
 ## 1. Schema
 
@@ -82,7 +81,7 @@ curl -XPOST localhost:8080/query -d '{
 ```
 
 Conditional writes (`cond` upserts) guard on these same counts —
-see [DQL upserts](dql.md#upserts).
+see [DQL upserts](../guides/dql.md#upserts).
 
 ## 5. Back up and export
 
@@ -106,6 +105,6 @@ curl -XPOST 'localhost:8080/mutate?commitNow=true' \
 (Use a real uid from step 3 — `0x3` is illustrative. Deletes need
 the `delete` block; bare bodies are always sets.)
 
-You now know the whole loop: [DQL](dql.md) for the language,
-[Admin](admin.md) for operations, [Security](security.md) to lock
+You now know the whole loop: [DQL](../guides/dql.md) for the language,
+[Admin](../guides/admin.md) for operations, [Security](../guides/security.md) to lock
 it down.

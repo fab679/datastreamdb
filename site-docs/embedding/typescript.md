@@ -39,7 +39,10 @@ console.log(persistent.id(), persistent.backend()) // uuid, 'fjall'
 db.dqlAlter(`
   name: string @index(exact) .
   friend: [uid] @reverse .
-  type Person { name friend }
+  type Person {
+    name
+    friend
+  }
 `)
 db.dqlMutate('{ set { _:a <name> "Ada" . _:b <name> "Bob" . _:a <friend> _:b . } }')
 console.log(db.dqlQuery('{ people(func: eq(name, "Ada")) { name friend { name } } }'))

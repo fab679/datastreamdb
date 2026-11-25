@@ -81,7 +81,9 @@ Embedded DQL and GraphQL are single-node but use the same executor and GraphQL
 layer as the standalone servers:
 
 ```rust
-db.dql_alter("name: string @index(exact) . friend: [uid] @reverse . type Person { name friend }")?;
+db.dql_alter(
+    "name: string @index(exact) . friend: [uid] @reverse . type Person {\n    name\n    friend\n}",
+)?;
 db.dql_mutate(r#"{ set { _:a <name> "Ada" . _:b <name> "Bob" . _:a <friend> _:b . } }"#)?;
 let people = db.dql_query(r#"{ people(func: eq(name, "Ada")) { name friend { name } } }"#)?;
 ```
@@ -119,4 +121,5 @@ checked-in allowlist.
 
 The published developer guide lives at `site-docs/embedding/index.md` and has
 language-specific examples for Rust, TypeScript, Python, and C. Complete
-movies/TODO/orders walkthroughs are in `site-docs/embedding/tutorials.md`.
+movies/TODO/orders walkthroughs are in `site-docs/tutorials/`, and the shared
+data model is explained in `site-docs/concepts/`.

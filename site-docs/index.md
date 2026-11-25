@@ -1,66 +1,7 @@
-# datastreamdb
-
-DataStreamDB, ported to Rust — runnable as standalone `zero`/`alpha`
-servers or embedded in-process with many isolated instances.
-
-- **Standalone**: DQL queries, mutations, upserts, schema alters,
-  GraphQL data layer, ACL, backups, multi-tenancy.
-- **Embedded**: open any number of isolated instances from Rust,
-  TypeScript, Python, or C with no servers and no ports.
-
-!!! note "0.2.0 scope"
-    Embedded instances support DQL relationship/pattern queries, DQL
-    mutations, schema alters, and GraphQL queries/mutations/subscriptions,
-    alongside the key-value API. Embedded graph mode is single-node; use the
-    standalone servers for clustering, ACL, and namespaces. See
-    [DQL & GraphQL](embedding/queries.md) and [Limitations](limitations.md).
-
-## Install
-
-=== "Rust (embedded)"
-
-    ```toml
-    [dependencies]
-    datastreamdb-core = "0.2"
-    ```
-
-=== "TypeScript (embedded)"
-
-    ```sh
-    npm install @datastreamdb/core
-    ```
-
-=== "Python (embedded)"
-
-    ```sh
-    pip install datastreamdb
-    ```
-
-=== "C (embedded)"
-
-    Download the release asset (`libdatastreamdb_ffi.a` + `datastreamdb.h`) and link it:
-
-    ```sh
-    cc app.c -ldatastreamdb_ffi -o app
-    ```
-
-=== "Servers (standalone)"
-
-    ```sh
-    cargo install datastreamdb-server --bin zero --bin alpha
-    ```
-
-## Sixty seconds, embedded (TypeScript)
-
-```js
-import { Instance } from '@datastreamdb/core'
-
-const a = new Instance('{}')          // in-memory, isolated
-const b = new Instance('{"tenant": "b"}')
-a.put('name', 'Ada')
-console.log(a.get('name'))            // Ada
-console.log(b.get('name'))            // null — instances are isolated
-```
-
-Continue with [Embedding](embedding/index.md) or, for the full
-database, the [Quickstart](quickstart.md).
+---
+template: home.html
+description: An embeddable graph database for Rust, TypeScript, Python, and C. DQL and GraphQL in-process, or as standalone zero and alpha servers.
+hide:
+  - navigation
+  - toc
+---
