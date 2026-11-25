@@ -459,6 +459,16 @@ impl TxnCoordinator {
         if out.aborted || out.commit_ts == 0 {
             return Err(CoordError::Aborted);
         }
+        // Zero assigns the commit timestamp before this alpha's applier
+        // necessarily applies the delta. Wait for the local oracle to reach
+        // it so the next read sees the committed write.
+        let posting = Arc::clone(&self.posting);
+        let commit_ts = out.commit_ts;
+        tokio::task::spawn_blocking(move || posting.oracle().wait_for_ts(commit_ts))
+            .await
+            .map_err(|err| {
+                CoordError::Internal(format!("wait for commit_ts {commit_ts}: {err}"))
+            })?;
         Ok(out)
     }
 
