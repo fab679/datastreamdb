@@ -36,58 +36,14 @@ GraphQL.
 - [TODO app with GraphQL](todo-graphql.md): GraphQL project/task mutations and queries.
 - [Orders with numeric facets](orders-dql.md): line-item facets, nested relationships, reverse lookups.
 
-## Embedded instance examples
+## How the tutorials are built
 
-The same DQL works through the embedded API:
+Each tutorial opens with a complete program for Python, TypeScript, and Rust:
+install, create an instance, apply the schema, add data, run a query, and print
+the result. The C tab shows the ABI lifecycle and links to the full C guide.
 
-=== "Rust"
-
-    ```rust
-    let db = datastreamdb_core::Instance::open(
-        datastreamdb_core::InstanceConfig::memory()
-    )?;
-    db.dql_alter(SCHEMA)?;
-    db.dql_mutate(MOVIES)?;
-    let result = db.dql_query(r#"
-      { movie(func: eq(name, "The Matrix")) {
-          name cast: acted_in @facets(role, billing) { name }
-      } }
-    "#)?;
-    ```
-
-=== "TypeScript"
-
-    ```js
-    const db = new Instance('{}')
-    db.dqlAlter(SCHEMA)
-    db.dqlMutate(MOVIES)
-    const result = JSON.parse(db.dqlQuery(`
-      { movie(func: eq(name, "The Matrix")) {
-          name cast: acted_in @facets(role, billing) { name }
-      } }
-    `))
-    ```
-
-=== "Python"
-
-    ```python
-    db = Instance("{}")
-    db.dql_alter(SCHEMA)
-    db.dql_mutate(MOVIES)
-    result = json.loads(db.dql_query("""
-      { movie(func: eq(name, "The Matrix")) {
-          name cast: acted_in @facets(role, billing) { name }
-      } }
-    """))
-    ```
-
-=== "C"
-
-    ```json
-    {"op":"dql_alter","schema":"name: string @index(exact) . acted_in: [uid] @reverse . type Movie { name\nacted_in }"}
-    {"op":"dql_mutate","query":"{ set { _:m <name> \"The Matrix\" .\n_:k <name> \"Keanu Reeves\" .\n_:m <acted_in> _:k (role=\"Neo\", billing=1) .\n} }"}
-    {"op":"dql_query","query":"{ m(func: eq(name, \"The Matrix\")) { name acted_in @facets(role, billing) { name } } }"}
-    ```
+The per-language API is covered in [Embedding](../embedding/index.md); the
+language and type reference is in [DQL and GraphQL](../embedding/queries.md).
 
 ## Common gotchas
 

@@ -2,53 +2,14 @@
 
 Use facets to model line-item properties on an order-to-product edge.
 
-## Before you start
+## Step by step
 
-Pick a binding. Each tab shows the install, how to open an instance, and the
-three calls this tutorial uses. `SCHEMA`, `DATA`, and `QUERY` are the blocks in
-the sections below.
-
-=== "Rust"
-
-    ```toml
-    [dependencies]
-    datastreamdb-core = "0.2"
-    serde_json = "1"
-    ```
-
-    ```rust
-    use datastreamdb_core::{Instance, InstanceConfig};
-
-    let db = Instance::open(InstanceConfig::memory())?;
-
-    db.dql_alter(SCHEMA)?;
-    db.dql_mutate(DATA)?;
-    let result = db.dql_query(QUERY)?;
-    println!("{result}");
-    ```
-
-    For a persistent instance, open with
-    `InstanceConfig::from_json(r#"{"data_dir": "./data"}"#)?`.
-
-=== "TypeScript"
-
-    ```sh
-    npm install @datastreamdb/core
-    ```
-
-    ```js
-    import { Instance } from '@datastreamdb/core'
-
-    const db = new Instance('{}')
-
-    db.dqlAlter(SCHEMA)
-    db.dqlMutate(DATA)
-    const result = JSON.parse(db.dqlQuery(QUERY))
-    console.log(result)
-    ```
-
-    For a persistent instance, pass
-    `JSON.stringify({ data_dir: './data' })` to `new Instance(...)`.
+The Python, TypeScript, and Rust tabs are complete programs: install, open an
+instance, apply the schema, add the data, run the query, and print the result.
+The C tab shows the ABI lifecycle; the [C guide](../embedding/c.md) has the full
+envelope example. This tutorial puts facets on a line-item edge: quantity and
+price belong to the order-to-product relationship, not to the order or the
+product.
 
 === "Python"
 
@@ -62,14 +23,227 @@ the sections below.
 
     db = Instance("{}")
 
-    db.dql_alter(SCHEMA)
-    db.dql_mutate(DATA)
-    result = json.loads(db.dql_query(QUERY))
-    print(result)
+    # 1. Schema
+    db.dql_alter("""
+    name: string @index(exact) .
+    email: string @index(exact) .
+    sku: string @index(exact) .
+    price: float @index(float) .
+    quantity: int @index(int) .
+    ordered: [uid] @reverse .
+    type Customer {
+        name
+        email
+    }
+    type Product {
+        name
+        sku
+        price
+    }
+    type Order {
+        name
+        ordered
+    }
+    """)
+
+    # 2. Data
+    db.dql_mutate("""
+    {
+     set {
+      _:ada <name> "Ada" .
+      _:ada <email> "ada@example.com" .
+      _:ada <datastreamdb.type> "Customer" .
+      _:laptop <name> "Laptop" .
+      _:laptop <sku> "LAP-1" .
+      _:laptop <price> "999.00"^^<xs:float> .
+      _:laptop <datastreamdb.type> "Product" .
+      _:mouse <name> "Mouse" .
+      _:mouse <sku> "MOU-1" .
+      _:mouse <price> "25.00"^^<xs:float> .
+      _:mouse <datastreamdb.type> "Product" .
+      _:order <name> "Order #1001" .
+      _:order <datastreamdb.type> "Order" .
+      _:ada <ordered> _:order .
+      _:order <ordered> _:laptop (quantity=1, price=999.00) .
+      _:order <ordered> _:mouse (quantity=2, price=25.00) .
+     }
+    }
+    """)
+
+    # 3. Query
+    result = json.loads(db.dql_query("""
+    {
+     c(func: eq(name, "Ada")) {
+      name email
+      ordered @facets(quantity, price) {
+       name
+       ordered @facets(quantity, price) { name sku price }
+      }
+     }
+    }
+    """))
+    print(json.dumps(result, indent=2))
+    ```
+
+    For a persistent instance, replace `Instance("{}")` with
+    `Instance(json.dumps({"data_dir": "./data"}))`.
+
+=== "TypeScript"
+
+    ```sh
+    npm install @datastreamdb/core
+    ```
+
+    ```js
+    import { Instance } from '@datastreamdb/core'
+
+    const db = new Instance('{}')
+
+    // 1. Schema
+    db.dqlAlter(`
+    name: string @index(exact) .
+    email: string @index(exact) .
+    sku: string @index(exact) .
+    price: float @index(float) .
+    quantity: int @index(int) .
+    ordered: [uid] @reverse .
+    type Customer {
+      name
+      email
+    }
+    type Product {
+      name
+      sku
+      price
+    }
+    type Order {
+      name
+      ordered
+    }
+    `)
+
+    // 2. Data
+    db.dqlMutate(`
+    {
+     set {
+      _:ada <name> "Ada" .
+      _:ada <email> "ada@example.com" .
+      _:ada <datastreamdb.type> "Customer" .
+      _:laptop <name> "Laptop" .
+      _:laptop <sku> "LAP-1" .
+      _:laptop <price> "999.00"^^<xs:float> .
+      _:laptop <datastreamdb.type> "Product" .
+      _:mouse <name> "Mouse" .
+      _:mouse <sku> "MOU-1" .
+      _:mouse <price> "25.00"^^<xs:float> .
+      _:mouse <datastreamdb.type> "Product" .
+      _:order <name> "Order #1001" .
+      _:order <datastreamdb.type> "Order" .
+      _:ada <ordered> _:order .
+      _:order <ordered> _:laptop (quantity=1, price=999.00) .
+      _:order <ordered> _:mouse (quantity=2, price=25.00) .
+     }
+    }
+    `)
+
+    // 3. Query
+    const result = JSON.parse(db.dqlQuery(`
+    {
+     c(func: eq(name, "Ada")) {
+      name email
+      ordered @facets(quantity, price) {
+       name
+       ordered @facets(quantity, price) { name sku price }
+      }
+     }
+    }
+    `))
+    console.log(JSON.stringify(result, null, 2))
     ```
 
     For a persistent instance, pass
-    `json.dumps({"data_dir": "./data"})` to `Instance(...)`.
+    `JSON.stringify({ data_dir: './data' })` to `new Instance(...)`.
+
+=== "Rust"
+
+    ```toml
+    [dependencies]
+    datastreamdb-core = "0.2"
+    serde_json = "1"
+    ```
+
+    ```rust
+    use datastreamdb_core::{Instance, InstanceConfig};
+
+    fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let db = Instance::open(InstanceConfig::memory())?;
+
+        // 1. Schema
+        db.dql_alter(r#"
+    name: string @index(exact) .
+    email: string @index(exact) .
+    sku: string @index(exact) .
+    price: float @index(float) .
+    quantity: int @index(int) .
+    ordered: [uid] @reverse .
+    type Customer {
+        name
+        email
+    }
+    type Product {
+        name
+        sku
+        price
+    }
+    type Order {
+        name
+        ordered
+    }
+    "#)?;
+
+        // 2. Data
+        db.dql_mutate(r#"
+    {
+     set {
+      _:ada <name> "Ada" .
+      _:ada <email> "ada@example.com" .
+      _:ada <datastreamdb.type> "Customer" .
+      _:laptop <name> "Laptop" .
+      _:laptop <sku> "LAP-1" .
+      _:laptop <price> "999.00"^^<xs:float> .
+      _:laptop <datastreamdb.type> "Product" .
+      _:mouse <name> "Mouse" .
+      _:mouse <sku> "MOU-1" .
+      _:mouse <price> "25.00"^^<xs:float> .
+      _:mouse <datastreamdb.type> "Product" .
+      _:order <name> "Order #1001" .
+      _:order <datastreamdb.type> "Order" .
+      _:ada <ordered> _:order .
+      _:order <ordered> _:laptop (quantity=1, price=999.00) .
+      _:order <ordered> _:mouse (quantity=2, price=25.00) .
+     }
+    }
+    "#)?;
+
+        // 3. Query
+        let result = db.dql_query(r#"
+    {
+     c(func: eq(name, "Ada")) {
+      name email
+      ordered @facets(quantity, price) {
+       name
+       ordered @facets(quantity, price) { name sku price }
+      }
+     }
+    }
+    "#)?;
+        println!("{result}");
+        Ok(())
+    }
+    ```
+
+    For a persistent instance, open with
+    `InstanceConfig::from_json(r#"{"data_dir": "./data"}"#)?`.
 
 === "C"
 
@@ -77,43 +251,23 @@ the sections below.
     [v0.2.0 release](https://github.com/fab679/datastreamdb/releases/tag/v0.2.0).
 
     ```c
-    #include <stdio.h>
-    #include <string.h>
-    #include "datastreamdb.h"
+    datastreamdb_handle_t *db = NULL;
+    datastreamdb_open("{}", &db);
 
-    static int exec(datastreamdb_handle_t *db, const char *request) {
-      uint8_t *out = NULL;
-      size_t len = 0;
-      int rc = datastreamdb_execute(db, (const uint8_t *)request,
-                                    strlen(request), &out, &len);
-      if (rc == DATASTREAMDB_OK) {
-        fwrite(out, 1, len, stdout);
-        datastreamdb_free_bytes(out, len);
-      }
-      return rc;
-    }
+    /* Build these envelopes from the DQL strings in the steps below. */
+    exec(db, "{\"op\":\"dql_alter\",\"schema\":\"...\"}");
+    exec(db, "{\"op\":\"dql_mutate\",\"query\":\"...\"}");
+    exec(db, "{\"op\":\"dql_query\",\"query\":\"...\"}");
 
-    int main(void) {
-      datastreamdb_handle_t *db = NULL;
-      datastreamdb_open("{}", &db);
-
-      exec(db, "{\"op\":\"dql_alter\",\"schema\":\"...\"}");
-      exec(db, "{\"op\":\"dql_mutate\",\"query\":\"...\"}");
-      exec(db, "{\"op\":\"dql_query\",\"query\":\"...\"}");
-
-      datastreamdb_close(db);
-      return 0;
-    }
+    datastreamdb_close(db);
     ```
 
-    The `...` placeholders are the JSON-escaped blocks below. Use a JSON
-    library to build them rather than escaping by hand.
+    The [C embedding guide](../embedding/c.md) has the complete `exec` helper,
+    status codes, and buffer ownership rules.
 
-The blocks below are the DQL documents referenced as `SCHEMA`, `DATA`, and
-`QUERY`. This tutorial puts facets on a line-item edge: quantity and price
-belong to the order-to-product relationship, not to the order or the product.
+## Step 1: schema
 
-## Schema
+This is the schema used in the complete program above.
 
 ```text
 name: string @index(exact) .
@@ -137,7 +291,7 @@ type Order {
 }
 ```
 
-## Data
+## Step 2: data
 
 ```text
 {
@@ -162,7 +316,7 @@ type Order {
 }
 ```
 
-## Query nested relationships and facets
+## Step 3: query nested relationships and facets
 
 ```text
 {
@@ -177,6 +331,8 @@ type Order {
 ```
 
 ## Reverse lookup
+
+Run this with the same `dql_query` call from step 3.
 
 ```text
 { p(func: eq(sku, "LAP-1")) { name ~ordered { name } } }

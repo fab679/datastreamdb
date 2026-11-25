@@ -2,53 +2,12 @@
 
 Model projects, tasks, tags, assignments, dates, and relationship facets.
 
-## Before you start
+## Step by step
 
-Pick a binding. Each tab shows the install, how to open an instance, and the
-three calls this tutorial uses. `SCHEMA`, `DATA`, and `QUERY` are the blocks in
-the sections below.
-
-=== "Rust"
-
-    ```toml
-    [dependencies]
-    datastreamdb-core = "0.2"
-    serde_json = "1"
-    ```
-
-    ```rust
-    use datastreamdb_core::{Instance, InstanceConfig};
-
-    let db = Instance::open(InstanceConfig::memory())?;
-
-    db.dql_alter(SCHEMA)?;
-    db.dql_mutate(DATA)?;
-    let result = db.dql_query(QUERY)?;
-    println!("{result}");
-    ```
-
-    For a persistent instance, open with
-    `InstanceConfig::from_json(r#"{"data_dir": "./data"}"#)?`.
-
-=== "TypeScript"
-
-    ```sh
-    npm install @datastreamdb/core
-    ```
-
-    ```js
-    import { Instance } from '@datastreamdb/core'
-
-    const db = new Instance('{}')
-
-    db.dqlAlter(SCHEMA)
-    db.dqlMutate(DATA)
-    const result = JSON.parse(db.dqlQuery(QUERY))
-    console.log(result)
-    ```
-
-    For a persistent instance, pass
-    `JSON.stringify({ data_dir: './data' })` to `new Instance(...)`.
+The Python, TypeScript, and Rust tabs are complete programs: install, open an
+instance, apply the schema, add the data, run the query, and print the result.
+The C tab shows the ABI lifecycle; the [C guide](../embedding/c.md) has the full
+envelope example.
 
 === "Python"
 
@@ -62,14 +21,266 @@ the sections below.
 
     db = Instance("{}")
 
-    db.dql_alter(SCHEMA)
-    db.dql_mutate(DATA)
-    result = json.loads(db.dql_query(QUERY))
-    print(result)
+    # 1. Schema
+    db.dql_alter("""
+    name: string @index(exact, term) .
+    status: string @index(exact) .
+    priority: int @index(int) .
+    due: datetime .
+    estimate: int @index(int) .
+    belongs_to: [uid] @reverse .
+    tagged: [uid] @reverse .
+    assigned_to: [uid] @reverse .
+    type Task {
+        name
+        status
+        priority
+        due
+        estimate
+        belongs_to
+        tagged
+        assigned_to
+    }
+    type Project {
+        name
+    }
+    type Tag {
+        name
+    }
+    type Person {
+        name
+    }
+    """)
+
+    # 2. Data
+    db.dql_mutate("""
+    {
+     set {
+      _:proj <name> "Website launch" .
+      _:proj <datastreamdb.type> "Project" .
+      _:task1 <name> "Write release notes" .
+      _:task1 <status> "todo" .
+      _:task1 <priority> "2"^^<xs:int> .
+      _:task1 <due> "2026-11-30T17:00:00Z"^^<xs:dateTime> .
+      _:task1 <estimate> "3"^^<xs:int> .
+      _:task1 <belongs_to> _:proj .
+      _:task1 <datastreamdb.type> "Task" .
+      _:task2 <name> "Deploy staging" .
+      _:task2 <status> "doing" .
+      _:task2 <priority> "1"^^<xs:int> .
+      _:task2 <estimate> "2"^^<xs:int> .
+      _:task2 <belongs_to> _:proj .
+      _:task2 <datastreamdb.type> "Task" .
+      _:ada <name> "Ada" .
+      _:ada <datastreamdb.type> "Person" .
+      _:task1 <assigned_to> _:ada (role="owner", since="2026-11-01") .
+      _:task2 <assigned_to> _:ada (role="reviewer", since="2026-11-05") .
+      _:urgent <name> "urgent" .
+      _:urgent <datastreamdb.type> "Tag" .
+      _:task1 <tagged> _:urgent .
+     }
+    }
+    """)
+
+    # 3. Query
+    result = json.loads(db.dql_query("""
+    {
+     tasks(func: type(Task)) {
+      name status priority due estimate
+      belongs_to { name }
+      tagged { name }
+      assigned_to @facets(role, since) { name }
+     }
+    }
+    """))
+    print(json.dumps(result, indent=2))
+    ```
+
+    For a persistent instance, replace `Instance("{}")` with
+    `Instance(json.dumps({"data_dir": "./data"}))`.
+
+=== "TypeScript"
+
+    ```sh
+    npm install @datastreamdb/core
+    ```
+
+    ```js
+    import { Instance } from '@datastreamdb/core'
+
+    const db = new Instance('{}')
+
+    // 1. Schema
+    db.dqlAlter(`
+    name: string @index(exact, term) .
+    status: string @index(exact) .
+    priority: int @index(int) .
+    due: datetime .
+    estimate: int @index(int) .
+    belongs_to: [uid] @reverse .
+    tagged: [uid] @reverse .
+    assigned_to: [uid] @reverse .
+    type Task {
+      name
+      status
+      priority
+      due
+      estimate
+      belongs_to
+      tagged
+      assigned_to
+    }
+    type Project {
+      name
+    }
+    type Tag {
+      name
+    }
+    type Person {
+      name
+    }
+    `)
+
+    // 2. Data
+    db.dqlMutate(`
+    {
+     set {
+      _:proj <name> "Website launch" .
+      _:proj <datastreamdb.type> "Project" .
+      _:task1 <name> "Write release notes" .
+      _:task1 <status> "todo" .
+      _:task1 <priority> "2"^^<xs:int> .
+      _:task1 <due> "2026-11-30T17:00:00Z"^^<xs:dateTime> .
+      _:task1 <estimate> "3"^^<xs:int> .
+      _:task1 <belongs_to> _:proj .
+      _:task1 <datastreamdb.type> "Task" .
+      _:task2 <name> "Deploy staging" .
+      _:task2 <status> "doing" .
+      _:task2 <priority> "1"^^<xs:int> .
+      _:task2 <estimate> "2"^^<xs:int> .
+      _:task2 <belongs_to> _:proj .
+      _:task2 <datastreamdb.type> "Task" .
+      _:ada <name> "Ada" .
+      _:ada <datastreamdb.type> "Person" .
+      _:task1 <assigned_to> _:ada (role="owner", since="2026-11-01") .
+      _:task2 <assigned_to> _:ada (role="reviewer", since="2026-11-05") .
+      _:urgent <name> "urgent" .
+      _:urgent <datastreamdb.type> "Tag" .
+      _:task1 <tagged> _:urgent .
+     }
+    }
+    `)
+
+    // 3. Query
+    const result = JSON.parse(db.dqlQuery(`
+    {
+     tasks(func: type(Task)) {
+      name status priority due estimate
+      belongs_to { name }
+      tagged { name }
+      assigned_to @facets(role, since) { name }
+     }
+    }
+    `))
+    console.log(JSON.stringify(result, null, 2))
     ```
 
     For a persistent instance, pass
-    `json.dumps({"data_dir": "./data"})` to `Instance(...)`.
+    `JSON.stringify({ data_dir: './data' })` to `new Instance(...)`.
+
+=== "Rust"
+
+    ```toml
+    [dependencies]
+    datastreamdb-core = "0.2"
+    serde_json = "1"
+    ```
+
+    ```rust
+    use datastreamdb_core::{Instance, InstanceConfig};
+
+    fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let db = Instance::open(InstanceConfig::memory())?;
+
+        // 1. Schema
+        db.dql_alter(r#"
+    name: string @index(exact, term) .
+    status: string @index(exact) .
+    priority: int @index(int) .
+    due: datetime .
+    estimate: int @index(int) .
+    belongs_to: [uid] @reverse .
+    tagged: [uid] @reverse .
+    assigned_to: [uid] @reverse .
+    type Task {
+        name
+        status
+        priority
+        due
+        estimate
+        belongs_to
+        tagged
+        assigned_to
+    }
+    type Project {
+        name
+    }
+    type Tag {
+        name
+    }
+    type Person {
+        name
+    }
+    "#)?;
+
+        // 2. Data
+        db.dql_mutate(r#"
+    {
+     set {
+      _:proj <name> "Website launch" .
+      _:proj <datastreamdb.type> "Project" .
+      _:task1 <name> "Write release notes" .
+      _:task1 <status> "todo" .
+      _:task1 <priority> "2"^^<xs:int> .
+      _:task1 <due> "2026-11-30T17:00:00Z"^^<xs:dateTime> .
+      _:task1 <estimate> "3"^^<xs:int> .
+      _:task1 <belongs_to> _:proj .
+      _:task1 <datastreamdb.type> "Task" .
+      _:task2 <name> "Deploy staging" .
+      _:task2 <status> "doing" .
+      _:task2 <priority> "1"^^<xs:int> .
+      _:task2 <estimate> "2"^^<xs:int> .
+      _:task2 <belongs_to> _:proj .
+      _:task2 <datastreamdb.type> "Task" .
+      _:ada <name> "Ada" .
+      _:ada <datastreamdb.type> "Person" .
+      _:task1 <assigned_to> _:ada (role="owner", since="2026-11-01") .
+      _:task2 <assigned_to> _:ada (role="reviewer", since="2026-11-05") .
+      _:urgent <name> "urgent" .
+      _:urgent <datastreamdb.type> "Tag" .
+      _:task1 <tagged> _:urgent .
+     }
+    }
+    "#)?;
+
+        // 3. Query
+        let result = db.dql_query(r#"
+    {
+     tasks(func: type(Task)) {
+      name status priority due estimate
+      belongs_to { name }
+      tagged { name }
+      assigned_to @facets(role, since) { name }
+     }
+    }
+    "#)?;
+        println!("{result}");
+        Ok(())
+    }
+    ```
+
+    For a persistent instance, open with
+    `InstanceConfig::from_json(r#"{"data_dir": "./data"}"#)?`.
 
 === "C"
 
@@ -77,42 +288,23 @@ the sections below.
     [v0.2.0 release](https://github.com/fab679/datastreamdb/releases/tag/v0.2.0).
 
     ```c
-    #include <stdio.h>
-    #include <string.h>
-    #include "datastreamdb.h"
+    datastreamdb_handle_t *db = NULL;
+    datastreamdb_open("{}", &db);
 
-    static int exec(datastreamdb_handle_t *db, const char *request) {
-      uint8_t *out = NULL;
-      size_t len = 0;
-      int rc = datastreamdb_execute(db, (const uint8_t *)request,
-                                    strlen(request), &out, &len);
-      if (rc == DATASTREAMDB_OK) {
-        fwrite(out, 1, len, stdout);
-        datastreamdb_free_bytes(out, len);
-      }
-      return rc;
-    }
+    /* Build these envelopes from the DQL strings in the steps below. */
+    exec(db, "{\"op\":\"dql_alter\",\"schema\":\"...\"}");
+    exec(db, "{\"op\":\"dql_mutate\",\"query\":\"...\"}");
+    exec(db, "{\"op\":\"dql_query\",\"query\":\"...\"}");
 
-    int main(void) {
-      datastreamdb_handle_t *db = NULL;
-      datastreamdb_open("{}", &db);
-
-      exec(db, "{\"op\":\"dql_alter\",\"schema\":\"...\"}");
-      exec(db, "{\"op\":\"dql_mutate\",\"query\":\"...\"}");
-      exec(db, "{\"op\":\"dql_query\",\"query\":\"...\"}");
-
-      datastreamdb_close(db);
-      return 0;
-    }
+    datastreamdb_close(db);
     ```
 
-    The `...` placeholders are the JSON-escaped blocks below. Use a JSON
-    library to build them rather than escaping by hand.
+    The [C embedding guide](../embedding/c.md) has the complete `exec` helper,
+    status codes, and buffer ownership rules.
 
-The blocks below are the DQL documents referenced as `SCHEMA`, `DATA`, and
-`QUERY`.
+## Step 1: schema
 
-## Schema
+This is the schema used in the complete program above.
 
 ```text
 name: string @index(exact, term) .
@@ -144,7 +336,7 @@ type Person {
 }
 ```
 
-## Add projects, tasks, tags, assignments, and facets
+## Step 2: add projects, tasks, tags, assignments, and facets
 
 ```text
 {
@@ -178,7 +370,7 @@ type Person {
 `assigned_to` has facets `role` and `since`; `since` is a string here, which is
 fine for a facet.
 
-## Query tasks with relationships and facets
+## Step 3: query tasks with relationships and facets
 
 ```text
 {
@@ -193,12 +385,16 @@ fine for a facet.
 
 ## Filter and reverse
 
+Run these with the same `dql_query` call from step 3.
+
 ```text
 { t(func: eq(status, "doing")) { name priority } }
 { p(func: eq(name, "Website launch")) { name ~belongs_to { name } } }
 ```
 
 ## Add an indexed field later
+
+Run the schema line with `dql_alter`, then query it with `dql_query`.
 
 ```text
 estimate: int @index(int) .
