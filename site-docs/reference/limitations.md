@@ -7,6 +7,9 @@ What is out of scope and tracked for later releases:
 - **Embedded DQL scope**: relationship/pattern queries, set/delete mutations,
   and additive schema alters are supported. Drop operations, upserts, and
   query variables are not exposed yet.
+- **DQL deletes**: `S P *` and exact-value deletes work. The `S * *` wildcard is
+  accepted but not applied in 0.2.1; delete predicates individually. Facets are
+  replaced when the edge is set again — there is no separate facet delete.
 - **Embedded GraphQL scope**: queries, mutations, and poll-based subscriptions.
   No WebSocket push, `@auth`, `@custom` HTTP/lambda resolvers, remote schemas,
   or vector indexes.

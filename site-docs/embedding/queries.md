@@ -103,6 +103,40 @@ let assigned = db.dql_mutate(r#"{
 `dql_mutate` returns blank-node assignments (`_:ada -> uid`). GraphQL mutations
 use the same engine and do not need a separate DQL mutation.
 
+## Deleting data
+
+Delete blocks take UIDs, so query them first:
+
+```text
+{ q(func: eq(name, "Ada")) { uid friend { uid } } }
+```
+
+Delete one relationship edge:
+
+```text
+{ delete { <0x2> <friend> <0x3> . } }
+```
+
+Delete every value of a property:
+
+```text
+{ delete { <0x2> <age> * . } }
+```
+
+Or delete one exact scalar value:
+
+```text
+{ delete { <0x2> <age> "30"^^<xs:int> . } }
+```
+
+Pass these to `dql_mutate` / `dqlMutate` / `dql_mutate` like any other
+mutation. The reverse edge is removed with the forward edge.
+
+Facets are replaced when the edge is set again; omitted facets are dropped.
+Setting the edge with no facet map clears all facets. Deleting the edge removes
+its facets. `S * *` is not applied in 0.2.1 — delete predicates individually.
+See [deletes](../guides/dql.md#deletes) for the full rules.
+
 ## Relationship traversal
 
 ```text

@@ -135,7 +135,80 @@ curl -XPOST 'localhost:8080/mutate?commitNow=true' \
   }'
 ```
 
-Drop whole predicates via alter instead:
+The delete block takes UIDs or blank nodes, not query functions. Find the UIDs
+first:
+
+```text
+{ q(func: eq(name, "Ada")) { uid friend { uid } } }
+```
+
+### Delete one relationship
+
+Delete the specific edge by naming both endpoints:
+
+```text
+{
+  delete {
+    <0x2> <friend> <0x3> .
+  }
+}
+```
+
+The reverse edge (`~friend`) is removed with it. Deleting one item from a list
+predicate removes only that edge.
+
+### Delete all values of a predicate
+
+`S P *` removes every value of that predicate on the node, including its index
+entries:
+
+```text
+{
+  delete {
+    <0x2> <age> * .
+  }
+}
+```
+
+For a scalar, naming the exact value also works:
+
+```text
+{
+  delete {
+    <0x2> <age> "30"^^<xs:int> .
+  }
+}
+```
+
+For a language-tagged value, include the tag: `<0x2> <name@es> * .`.
+
+### Delete every predicate on a node
+
+Dgraph's `S * *` wildcard is **not applied in 0.2.1**. The mutation is accepted
+but leaves the data in place, even on typed nodes. Delete predicates
+individually with `S P *`, or drop the predicate server-side with `alter`.
+
+```text
+{ delete { <0x2> <name> * . <0x2> <age> * . <0x2> <friend> * . } }
+```
+
+There is no node-delete operation. Removing all of a node's predicates leaves
+an empty node; the UID is not reused.
+
+### Facets
+
+Facets have no separate delete form. The facet map on an edge is **replaced**
+when the edge is set again:
+
+```text
+{ set { <0x2> <friend> <0x3> (role="Trinity", billing=2) . } }
+```
+
+Omitted facets are removed — setting the same edge with only `role` drops
+`billing`. Setting the edge with no facet map clears all facets while keeping
+the edge. Deleting the edge removes the facets with it.
+
+Drop a whole predicate, with all its data, via alter instead:
 
 ```sh
 curl -XPOST localhost:8080/alter -d '{"drop_attr": "age"}'
