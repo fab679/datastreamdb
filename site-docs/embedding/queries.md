@@ -23,7 +23,8 @@ schema. But declare schema when you need:
   infer a scalar and reject the UID value.
 - **Reverse edges** (`@reverse`) for `~friend` traversal.
 - **Indexes** for `eq`, `term`, `hash`, `int`, and similar root functions.
-- **Type definitions** for `type(Person)` and GraphQL-generated schemas.
+- **Type definitions** for schema-aware expansion/cascade and GraphQL-derived
+  schemas. The `type(Person)` root itself matches `datastreamdb.type` edges.
 
 ```text
 name: string @index(exact, term) .

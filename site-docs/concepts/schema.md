@@ -48,16 +48,21 @@ Mutations auto-derive **scalar** predicates, Dgraph-style:
 { set { _:a <name> "Ada" . } }
 ```
 
-`name` becomes a string predicate and `has(name)` works with no schema at all.
-Declare the schema when you need any of the following:
+`name` becomes a scalar predicate: the value is stored and `has(name)` works
+with no schema. But it has no index, no UID type, and no reverse edge. Schema is
+therefore **incremental** — declare what a query needs, when it needs it.
 
-| Need | Why |
-|---|---|
-| A UID relationship (`friend: [uid]`) | Otherwise the engine may infer a scalar and reject the uid value |
-| Reverse traversal (`@reverse`) | `~friend` needs the reverse edge maintained |
-| Indexed roots (`eq`, `term`, `int`, ranges) | No tokenizer means no index to consult |
-| Type queries (`type(Person)`) | Types must exist in the schema |
-| GraphQL-generated schemas | The SDL derives predicates, indexes, and types |
+| You want | Declare first? | Without it |
+|---|---|---|
+| Store/read a scalar, `has(pred)` | No | The value is stored; `has` works |
+| `eq`, `term`, or range roots | Yes (`@index`) | The mutation stores; the query fails with `attribute ... is not valid scalar type` |
+| A UID relationship (`friend: [uid]`) | Yes | The mutation fails: the predicate is treated as scalar and the UID value is rejected |
+| Reverse traversal (`~friend`) | Yes (`@reverse`) | There is no incoming edge to traverse |
+| `type(Name)` root | No | Matches `datastreamdb.type` edges; a `type` declaration adds schema-aware expansion/cascade |
+| GraphQL schema | Yes (SDL) | `graphql` has no schema; the SDL derives predicates, indexes, and types |
+
+You can add schema later. `alter` is additive, and an index added after data
+exists is rebuilt over the existing values, so it is queryable immediately.
 
 ## Types
 
@@ -72,8 +77,10 @@ type Person {
 ```
 
 Query it with `func: type(Person)`. Membership is recorded as a
-`datastreamdb.type` edge on the node. DQL mutations must set that edge
-explicitly; GraphQL mutations set it automatically.
+`datastreamdb.type` edge on the node, so the root query works even without a
+`type` declaration. The declaration is what makes type-aware expansion and
+cascade know the type's fields. DQL mutations must set the `datastreamdb.type`
+edge explicitly; GraphQL mutations set it automatically.
 
 ```text
 _:ada <datastreamdb.type> "Person" .

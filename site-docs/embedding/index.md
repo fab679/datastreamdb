@@ -109,7 +109,8 @@ For GraphQL, install an SDL with `set_graphql_schema` and send documents to
 Data is stored as predicates and nodes, exactly as in standalone mode:
 
 - Scalar predicates auto-derive on first mutation.
-- UID relationships, reverse edges, indexes, and types need a schema alter.
+- UID relationships, reverse edges, and indexes need a schema alter. A `type`
+  declaration adds field awareness for expansion/cascade.
 - `type(Name)` selects nodes by `datastreamdb.type`; GraphQL mutations set it
   automatically.
 - Facets describe an edge, not a node.
