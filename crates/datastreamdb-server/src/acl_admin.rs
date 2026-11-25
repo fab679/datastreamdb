@@ -260,8 +260,12 @@ impl AclAdmin {
     /// Returns [`AdminError::Conflict`] when the id exists, [`AdminError`]
     /// when the mutation fails.
     pub async fn add_user(&mut self, userid: &str, password: &str) -> Result<(), AdminError> {
-        let existing = self.user(userid).await?;
-        if existing.is_some() {
+        if self.user(userid).await?.is_none() {
+            // A just-committed mutation can lag the local read path; give
+            // the applier one short window before deciding to create.
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
+        if self.user(userid).await?.is_some() {
             return Err(AdminError::Conflict(format!(
                 "unable to create user because of conflict: {userid}"
             )));
@@ -280,6 +284,9 @@ impl AclAdmin {
     /// Returns [`AdminError::Conflict`] when the id exists, [`AdminError`]
     /// when the mutation fails.
     pub async fn add_group(&mut self, groupid: &str) -> Result<(), AdminError> {
+        if self.group(groupid).await?.is_none() {
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
         if self.group(groupid).await?.is_some() {
             return Err(AdminError::Conflict(format!(
                 "group {groupid:?} already exists"
