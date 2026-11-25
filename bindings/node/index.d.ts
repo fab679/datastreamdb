@@ -47,23 +47,71 @@ export declare class Instance {
    * Returns a JS error on engine failure.
    */
   get(key: string): string | null
-  /** Executes a DQL query and returns JSON. */
+  /**
+   * Executes a DQL query and returns JSON.
+   *
+   * # Errors
+   *
+   * Returns a JS error on parse/execution failure.
+   */
   dqlQuery(query: string): string
-  /** Applies a DQL mutation and returns assigned UIDs as JSON. */
+  /**
+   * Applies a DQL mutation and returns assigned UIDs as JSON.
+   *
+   * # Errors
+   *
+   * Returns a JS error on parse/execution failure.
+   */
   dqlMutate(mutation: string): string
-  /** Applies additive/updating DQL schema text. */
+  /**
+   * Applies additive/updating DQL schema text.
+   *
+   * # Errors
+   *
+   * Returns a JS error on schema/index-rebuild failure.
+   */
   dqlAlter(schema: string): void
-  /** Installs/replaces the embedded GraphQL schema from original SDL. */
+  /**
+   * Installs/replaces the embedded GraphQL schema from original SDL.
+   *
+   * # Errors
+   *
+   * Returns a JS error when the SDL is invalid or the schema cannot build.
+   */
   setGraphqlSchema(sdl: string): void
   /** Returns the installed GraphQL SDL, if any. */
   graphqlSchema(): string | null
-  /** Executes a GraphQL query/mutation and returns JSON. */
+  /**
+   * Executes a GraphQL query/mutation and returns JSON.
+   *
+   * # Errors
+   *
+   * Returns a JS error on schema/execution failure.
+   */
   graphql(query: string, variablesJson?: string | undefined | null, operation?: string | undefined | null, headersJson?: string | undefined | null): string
-  /** Async GraphQL query/mutation execution. */
+  /**
+   * Async GraphQL query/mutation execution.
+   *
+   * # Errors
+   *
+   * Returns a JS error on schema/execution failure.
+   */
   graphqlAsync(query: string, variablesJson?: string | undefined | null, operation?: string | undefined | null, headersJson?: string | undefined | null): Promise<string>
-  /** Creates a poll-based GraphQL subscription; returns its id. */
+  /**
+   * Creates a poll-based GraphQL subscription; returns its id.
+   *
+   * # Errors
+   *
+   * Returns a JS error when no schema is installed or the subscription is invalid.
+   */
   graphqlSubscribe(query: string, variablesJson?: string | undefined | null, headersJson?: string | undefined | null, pollMs?: number | undefined | null): number
-  /** Polls a subscription and returns `{changed,closed,response?}` JSON. */
+  /**
+   * Polls a subscription and returns `{changed,closed,response?}` JSON.
+   *
+   * # Errors
+   *
+   * Returns a JS error for an unknown subscription or execution failure.
+   */
   graphqlNext(id: number, waitMs?: number | undefined | null): string
   /** Cancels a subscription. */
   graphqlUnsubscribe(id: number): boolean
