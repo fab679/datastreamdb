@@ -1,5 +1,8 @@
 //! Consensus tests: single node, channel clusters, restarts, snapshots.
 
+#![allow(unknown_lints)]
+#![allow(clippy::unused_async_trait_impl)]
+
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;

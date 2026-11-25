@@ -1,5 +1,8 @@
 //! Tonic transport test: two nodes replicate over TCP.
 
+#![allow(unknown_lints)]
+#![allow(clippy::unused_async_trait_impl)]
+
 use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;

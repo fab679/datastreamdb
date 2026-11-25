@@ -5,6 +5,11 @@
 //! consensus runs on `openraft` with the WAL as its log store.
 
 #![warn(missing_docs)]
+// openraft's async trait methods are implemented with immediate futures in a
+// few places; the lint is newer than the workspace MSRV, so older clippy
+// versions must not reject the allow itself.
+#![allow(unknown_lints)]
+#![allow(clippy::unused_async_trait_impl)]
 
 mod log;
 pub mod log_store;
