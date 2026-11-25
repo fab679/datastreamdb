@@ -150,6 +150,7 @@ pedantic = { level = "warn", priority = -1 }
 # impls are intentional.
 assert_is_empty = "allow"
 unused_async_trait_impl = "allow"
+used_underscore_items = "allow"
 
 [profile.dev]
 debug = "line-tables-only"
