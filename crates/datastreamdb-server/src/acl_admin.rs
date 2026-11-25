@@ -96,6 +96,13 @@ pub fn parse_guardian_creds(flag: &str) -> Result<GuardianCreds, AdminError> {
 pub struct AclAdmin {
     /// Authenticated client.
     client: AuthedClient,
+    /// Read timestamp floor: the highest commit seen by this client.
+    ///
+    /// The admin flows are read-then-write (duplicate checks, rule
+    /// resolution). Reading at `max_assigned` can race the commit of the
+    /// previous mutation; pinning reads to the last commit makes the
+    /// sequence read-your-writes.
+    read_ts: u64,
 }
 
 impl AclAdmin {
@@ -128,21 +135,26 @@ impl AclAdmin {
         )?;
         Ok(Self {
             client: DataStreamDbClient::with_interceptor(channel, Token(token)),
+            read_ts: 0,
         })
     }
 
     /// Runs a read-only DQL query, returning the JSON body.
     async fn query_json(&mut self, query: &str) -> Result<Vec<u8>, AdminError> {
-        Ok(self
+        let response = self
             .client
             .query(Request {
                 query: query.to_owned(),
+                start_ts: self.read_ts,
                 ..Request::default()
             })
             .await
             .map_err(|err| AdminError::Rpc(err.to_string()))?
-            .into_inner()
-            .json)
+            .into_inner();
+        if let Some(txn) = response.txn.as_ref() {
+            self.read_ts = self.read_ts.max(txn.commit_ts);
+        }
+        Ok(response.json)
     }
 
     /// Runs set/del N-Quads with `commit_now`, failing on abort.
@@ -162,8 +174,11 @@ impl AclAdmin {
             .await
             .map_err(|err| AdminError::Rpc(format!("unable to {what}: {err}")))?
             .into_inner();
-        if response.txn.as_ref().is_some_and(|txn| txn.aborted) {
-            return Err(AdminError::Rpc(format!("unable to {what}: aborted")));
+        if let Some(txn) = response.txn.as_ref() {
+            if txn.aborted {
+                return Err(AdminError::Rpc(format!("unable to {what}: aborted")));
+            }
+            self.read_ts = self.read_ts.max(txn.commit_ts);
         }
         Ok(())
     }
