@@ -298,6 +298,9 @@ sub.close();
 
 ## Supported types
 
+The [schema reference](../reference/schema.md) has a declaration and query
+example for every type and index tokenizer.
+
 ### DQL predicate types
 
 | Type | Meaning | Index tokenizers |

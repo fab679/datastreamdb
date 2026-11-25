@@ -37,8 +37,8 @@ datastreamdb.type: [string] @index(exact) .
 - `@count`, `@upsert`, and `@lang` are also accepted where upstream DQL defines
   them.
 
-The full type and tokenizer table lives in
-[the embedded query reference](../embedding/queries.md#supported-types).
+The full type and tokenizer table, with examples for every index, lives in the
+[schema reference](../reference/schema.md).
 
 ## What needs declaring
 
