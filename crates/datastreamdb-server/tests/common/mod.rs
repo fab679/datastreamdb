@@ -172,6 +172,8 @@ pub async fn boot_alpha_acl_audit(
     tokio::spawn(async move {
         server.serve().await.expect("alpha serve");
     });
+    // ACL bootstrap/login caches settle just after the server starts serving.
+    tokio::time::sleep(Duration::from_millis(300)).await;
     (dir, grpc, http)
 }
 
