@@ -16,23 +16,27 @@ fn movies_dql_tutorial() {
 name: string @index(exact, term) .
 year: int @index(int) .
 rating: float @index(float) .
-genre: [string] @index(exact) .
 budget: int .
 directed: [uid] @reverse .
 acted_in: [uid] @reverse .
+genre: [uid] @reverse .
 type Movie {
  name
  year
  rating
- genre
  budget
  directed
  acted_in
+ genre
 }
 type Person {
  name
  directed
  acted_in
+}
+type Genre {
+ name
+ movies
 }
 ",
     )
@@ -45,9 +49,11 @@ type Person {
   _:matrix <name> "The Matrix" .
   _:matrix <year> "1999"^^<xs:int> .
   _:matrix <rating> "8.7"^^<xs:float> .
-  _:matrix <genre> "Sci-Fi" .
   _:matrix <budget> "63"^^<xs:int> .
   _:matrix <datastreamdb.type> "Movie" .
+  _:scifi <name> "Sci-Fi" .
+  _:scifi <datastreamdb.type> "Genre" .
+  _:matrix <genre> _:scifi .
   _:keanu <name> "Keanu Reeves" .
   _:keanu <datastreamdb.type> "Person" .
   _:carrie <name> "Carrie-Anne Moss" .
@@ -67,7 +73,8 @@ type Person {
         .dql_query(
             r#"{
  movie(func: eq(name, "The Matrix")) {
-  name year rating genre budget
+  name year rating budget
+  genre { name }
   directed { name }
   cast: acted_in @facets(role, billing) { name }
  }
@@ -79,11 +86,17 @@ type Person {
     assert!(text.contains("Keanu Reeves"), "{text}");
     assert!(text.contains("cast|role"), "{text}");
     assert!(text.contains("Trinity"), "{text}");
+    assert!(text.contains("Sci-Fi"), "{text}");
 
     let reverse = db
         .dql_query(r#"{ p(func: eq(name, "Keanu Reeves")) { name ~acted_in { name } } }"#)
         .expect("reverse");
     assert!(reverse.to_string().contains("The Matrix"));
+
+    let by_genre = db
+        .dql_query(r#"{ g(func: eq(name, "Sci-Fi")) { name ~genre { name year } } }"#)
+        .expect("genre reverse");
+    assert!(by_genre.to_string().contains("The Matrix"));
 
     let filtered = db
         .dql_query(
@@ -294,12 +307,18 @@ type Movie {
  rating: Float @search
  director: Person @hasInverse(field: directed)
  actors: [Person] @hasInverse(field: actedIn)
+ genres: [Genre] @hasInverse(field: movies)
 }
 type Person {
  id: ID!
  name: String @id @search(by: [hash])
  directed: [Movie]
  actedIn: [Movie]
+}
+type Genre {
+ id: ID!
+ name: String @id @search(by: [hash])
+ movies: [Movie]
 }
 ";
 
@@ -316,8 +335,9 @@ fn movies_graphql_tutorial() {
  addMovie(input: [{
   title: "The Matrix", year: 1999, rating: 8.7,
   director: {name: "Lana Wachowski"},
-  actors: [{name: "Keanu Reeves"}, {name: "Carrie-Anne Moss"}]
- }]) { movie { id title year rating director { name } actors { name } } numUids }
+  actors: [{name: "Keanu Reeves"}, {name: "Carrie-Anne Moss"}],
+  genres: [{name: "Sci-Fi"}]
+ }]) { movie { id title year rating director { name } actors { name } genres { name } } numUids }
 }"#,
             None,
             serde_json::json!({}),
@@ -329,7 +349,7 @@ fn movies_graphql_tutorial() {
     let queried = db
         .graphql(
             r#"{ queryMovie(filter: {title: {anyofterms: "Matrix"}}) {
- title year rating director { name } actors { name }
+ title year rating director { name } actors { name } genres { name }
 } }"#,
             None,
             serde_json::json!({}),
@@ -339,6 +359,7 @@ fn movies_graphql_tutorial() {
     let text = queried.to_string();
     assert!(text.contains("The Matrix"), "{text}");
     assert!(text.contains("Keanu Reeves"), "{text}");
+    assert!(text.contains("Sci-Fi"), "{text}");
 
     let updated = db
         .graphql(

@@ -33,37 +33,46 @@ GraphQL.
 name: string @index(exact, term) .
 year: int @index(int) .
 rating: float @index(float) .
-genre: [string] @index(exact) .
 budget: int .
 directed: [uid] @reverse .
 acted_in: [uid] @reverse .
+genre: [uid] @reverse .
 type Movie {
     name
     year
     rating
-    genre
     budget
     directed
     acted_in
+    genre
 }
 type Person {
     name
     directed
     acted_in
 }
+type Genre {
+    name
+    movies
+}
 ```
+
+Genres are **nodes**, not string properties: a genre can be shared by many
+movies, queried on its own, and traversed in reverse. The `genre` predicate is
+a UID relationship; `@reverse` gives `Genre -> movies`.
 
 ```rust
 db.dql_alter(r#"
 name: string @index(exact, term) .
 year: int @index(int) .
 rating: float @index(float) .
-genre: [string] @index(exact) .
 budget: int .
 directed: [uid] @reverse .
 acted_in: [uid] @reverse .
-type Movie { name year rating genre budget directed acted_in }
+genre: [uid] @reverse .
+type Movie { name year rating budget directed acted_in genre }
 type Person { name directed acted_in }
+type Genre { name movies }
 "#)?;
 ```
 
@@ -79,9 +88,11 @@ type Person { name directed acted_in }
   _:matrix <name> "The Matrix" .
   _:matrix <year> "1999"^^<xs:int> .
   _:matrix <rating> "8.7"^^<xs:float> .
-  _:matrix <genre> "Sci-Fi" .
   _:matrix <budget> "63"^^<xs:int> .
   _:matrix <datastreamdb.type> "Movie" .
+  _:scifi <name> "Sci-Fi" .
+  _:scifi <datastreamdb.type> "Genre" .
+  _:matrix <genre> _:scifi .
   _:keanu <name> "Keanu Reeves" .
   _:keanu <datastreamdb.type> "Person" .
   _:carrie <name> "Carrie-Anne Moss" .
@@ -103,7 +114,8 @@ it automatically.
 ```text
 {
  movie(func: eq(name, "The Matrix")) {
-  name year rating genre budget
+  name year rating budget
+  genre { name }
   directed { name }
   cast: acted_in @facets(role, billing) { name }
  }
@@ -118,7 +130,7 @@ Response shape:
     "name": "The Matrix",
     "year": 1999,
     "rating": 8.7,
-    "genre": ["Sci-Fi"],
+    "genre": [{ "name": "Sci-Fi" }],
     "budget": 63,
     "directed": [{ "name": "Lana Wachowski" }],
     "cast": [
@@ -133,6 +145,12 @@ Response shape:
 
 ```text
 { p(func: eq(name, "Keanu Reeves")) { name ~acted_in { name } } }
+```
+
+Genres are nodes, so you can query the genre and traverse back to its movies:
+
+```text
+{ g(func: eq(name, "Sci-Fi")) { name ~genre { name year } } }
 ```
 
 ### 5. Filter by a facet
@@ -174,12 +192,18 @@ type Movie {
   rating: Float @search
   director: Person @hasInverse(field: directed)
   actors: [Person] @hasInverse(field: actedIn)
+  genres: [Genre] @hasInverse(field: movies)
 }
 type Person {
   id: ID!
   name: String @id @search(by: [hash])
   directed: [Movie]
   actedIn: [Movie]
+}
+type Genre {
+  id: ID!
+  name: String @id @search(by: [hash])
+  movies: [Movie]
 }
 ```
 
@@ -194,9 +218,10 @@ mutation {
   addMovie(input: [{
     title: "The Matrix", year: 1999, rating: 8.7,
     director: {name: "Lana Wachowski"},
-    actors: [{name: "Keanu Reeves"}, {name: "Carrie-Anne Moss"}]
+    actors: [{name: "Keanu Reeves"}, {name: "Carrie-Anne Moss"}],
+    genres: [{name: "Sci-Fi"}]
   }]) {
-    movie { id title year rating director { name } actors { name } }
+    movie { id title year rating director { name } actors { name } genres { name } }
     numUids
   }
 }
@@ -212,6 +237,7 @@ mutation {
     rating
     director { name }
     actors { name }
+    genres { name }
   }
 }
 ```
