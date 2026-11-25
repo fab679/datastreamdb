@@ -406,18 +406,17 @@ impl SubGraph {
         let mut res = GroupResults::default();
         res.form_groups(&dedup, &[], &mut Vec::new());
 
-        for idx in 0..self.children.len() {
+        for child in &self.children {
             for group in &mut res.group {
-                let child = &self.children[idx];
                 match group.aggregate_child(child) {
                     Ok(()) | Err(QueryError::EmptyAggregation) => {}
                     Err(err) => return Err(err),
                 }
             }
-            if self.children[idx].params.var.is_empty() {
+            if child.params.var.is_empty() {
                 continue;
             }
-            let var = self.children[idx].params.var.clone();
+            let var = child.params.var.clone();
             let mut temp = ShardedMap::new();
             for group in &res.group {
                 if group.keys.is_empty() {
