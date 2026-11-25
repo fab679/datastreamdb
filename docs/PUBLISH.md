@@ -44,8 +44,8 @@ Canonical order:
 datastreamdb-proto datastreamdb-acl datastreamdb-codec datastreamdb-algo datastreamdb-audit
 datastreamdb-lex datastreamdb-types datastreamdb-tok datastreamdb-x datastreamdb-chunker
 datastreamdb-enc datastreamdb-schema datastreamdb-store datastreamdb-posting datastreamdb-backup
-datastreamdb-core datastreamdb-dql datastreamdb-task datastreamdb-query datastreamdb-graphql
-datastreamdb-raft datastreamdb-filestore datastreamdb-worker datastreamdb-frontend datastreamdb-ffi
+datastreamdb-dql datastreamdb-task datastreamdb-query datastreamdb-graphql datastreamdb-core
+datastreamdb-ffi datastreamdb-filestore datastreamdb-raft datastreamdb-worker datastreamdb-frontend
 datastreamdb-xidmap datastreamdb-loader datastreamdb-server
 ```
 

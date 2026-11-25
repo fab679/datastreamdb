@@ -54,16 +54,16 @@ CRATES=(
   datastreamdb-store
   datastreamdb-posting
   datastreamdb-backup
-  datastreamdb-core
   datastreamdb-dql
   datastreamdb-task
   datastreamdb-query
   datastreamdb-graphql
-  datastreamdb-raft
+  datastreamdb-core
+  datastreamdb-ffi
   datastreamdb-filestore
+  datastreamdb-raft
   datastreamdb-worker
   datastreamdb-frontend
-  datastreamdb-ffi
   datastreamdb-xidmap
   datastreamdb-loader
   datastreamdb-server
