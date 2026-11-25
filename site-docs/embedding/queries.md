@@ -130,6 +130,34 @@ Reverse edges work with `~friend` when the predicate has `@reverse`:
 { q(func: eq(name, "Bob")) { name ~friend { name } } }
 ```
 
+## Recursive queries
+
+`@recurse` walks a predicate repeatedly. Put every predicate in one block;
+nested child blocks are rejected.
+
+```text
+{
+  chain(func: eq(name, "A")) @recurse(depth: 4) {
+    name
+    friend
+  }
+}
+```
+
+- `depth` counts levels including the root: `depth: 1` returns only the root,
+  `depth: 2` adds direct friends, and so on.
+- `loop: false` (the default) deduplicates edges, so a cycle is traversed once
+  and expansion stops when no new edge remains.
+- `loop: true` allows revisiting edges and requires `depth > 0`. Use it when
+  repeated paths in a cyclic graph matter.
+- Omit `depth` (or set `0`) with `loop: false` for unbounded expansion. The
+  engine stops at the 1,000,000-edge query budget.
+- `$depth` and `$loop` variables parse, but embedded 0.2.0 does not expose query
+  variables; use literals. Standalone accepts them in the variables header.
+
+The `friend` predicate must be declared as `[uid]` (and `@reverse` if you need
+`~friend`).
+
 ## Nested pattern filters
 
 ```text

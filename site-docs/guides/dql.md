@@ -76,6 +76,12 @@ Root functions include `uid(...)`, `has(pred)`, `eq/le/ge/gt/lt`,
 (`first:`/`offset:`), ordering (`orderasc:`/`orderdesc:`), and
 `@cascade` follow upstream semantics.
 
+Recursive traversal uses `@recurse(depth: N, loop: false)` with every predicate
+in one block. `depth` includes the root; `loop: true` allows cycles and requires
+a positive depth. See
+[recursive queries](../embedding/queries.md#recursive-queries) for the edge
+budget and variable rules.
+
 Variables cross blocks with `var()`:
 
 ```
