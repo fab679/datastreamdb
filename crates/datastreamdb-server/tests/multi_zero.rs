@@ -1,8 +1,12 @@
 //! Multi-zero tests: join, replication, failover.
 
+use std::sync::atomic::{AtomicU16, Ordering};
 use std::time::Duration;
 
 use datastreamdb_proto::pb::{Num, num::LeaseType, zero_client::ZeroClient};
+
+/// Monotonic test-port allocator; avoids immediate reuse of OS ephemeral ports.
+static NEXT_PORT: AtomicU16 = AtomicU16::new(20_000);
 
 /// Boots a zero; `join` peers or bootstraps when empty.
 async fn boot_zero(
@@ -29,14 +33,19 @@ async fn boot_zero(
     (server, grpc, http)
 }
 
-/// Binds an ephemeral loopback port and returns it as an address.
+/// Returns a loopback address that is currently bindable and not recently
+/// handed out by this test binary.
 async fn free_addr() -> String {
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
-        .await
-        .expect("bind");
-    let addr = listener.local_addr().expect("addr").to_string();
-    drop(listener);
-    addr
+    loop {
+        let port = NEXT_PORT.fetch_add(1, Ordering::Relaxed);
+        if port == 0 {
+            continue;
+        }
+        let addr = format!("127.0.0.1:{port}");
+        if tokio::net::TcpListener::bind(&addr).await.is_ok() {
+            return addr;
+        }
+    }
 }
 
 /// Zero members visible in `server`'s state.
