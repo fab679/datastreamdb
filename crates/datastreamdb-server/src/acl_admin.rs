@@ -178,7 +178,9 @@ impl AclAdmin {
             if txn.aborted {
                 return Err(AdminError::Rpc(format!("unable to {what}: aborted")));
             }
-            self.read_ts = self.read_ts.max(txn.commit_ts);
+            // Read strictly after the commit so index and type edges are
+            // visible to the next read-then-write check.
+            self.read_ts = self.read_ts.max(txn.commit_ts.saturating_add(1));
         }
         Ok(())
     }
