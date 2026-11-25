@@ -153,6 +153,8 @@ fn http_identity(
 }
 
 /// Loads ACL rules before an enforcing handler runs.
+// Axum responses are intentionally returned by value at this boundary.
+#[allow(clippy::result_large_err)]
 async fn ensure_loaded(coordinator: &TxnCoordinator) -> Result<(), AxumResponse> {
     coordinator
         .ensure_acl_loaded(datastreamdb_x::ROOT_NAMESPACE)
