@@ -181,11 +181,6 @@ impl AclAdmin {
             // Read strictly after the commit so index and type edges are
             // visible to the next read-then-write check.
             self.read_ts = self.read_ts.max(txn.commit_ts.saturating_add(1));
-            #[cfg(debug_assertions)]
-            eprintln!(
-                "acl_admin mutate {what} start_ts={} commit_ts={} read_ts={}",
-                txn.start_ts, txn.commit_ts, self.read_ts
-            );
         }
         Ok(())
     }
@@ -206,12 +201,6 @@ impl AclAdmin {
                 uid datastreamdb.xid datastreamdb.user.group {{ uid datastreamdb.xid }} }} }}"
             ))
             .await?;
-        #[cfg(debug_assertions)]
-        eprintln!(
-            "acl_admin user {userid} read_ts={} body={}",
-            self.read_ts,
-            String::from_utf8_lossy(&body)
-        );
         datastreamdb_acl::entities::unmarshal_user(&body, "user")
             .map_err(|err| AdminError::Invalid(err.to_string()))
     }
@@ -272,12 +261,6 @@ impl AclAdmin {
     /// when the mutation fails.
     pub async fn add_user(&mut self, userid: &str, password: &str) -> Result<(), AdminError> {
         let existing = self.user(userid).await?;
-        #[cfg(debug_assertions)]
-        eprintln!(
-            "acl_admin add_user {userid} read_ts={} existing={}",
-            self.read_ts,
-            existing.is_some()
-        );
         if existing.is_some() {
             return Err(AdminError::Conflict(format!(
                 "unable to create user because of conflict: {userid}"
