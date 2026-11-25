@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.1
+
+Patch release:
+
+- ACL admin reads now see their own writes; duplicate user and group checks no
+  longer race a just-committed mutation.
+- `commit` waits for the local applier to reach the commit timestamp before
+  returning, so the next read sees the committed write.
+- Documentation: DQL/GraphQL-first embedded guides, complete per-language
+  tutorial programs, schema and directive references, and a custom landing page.
+
 ## 0.2.0
 
 Embedded graph mode:

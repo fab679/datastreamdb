@@ -94,7 +94,7 @@ Filter on a facet to select edges rather than nodes:
 This returns only the cast members whose billing on this edge is greater than
 one. The person node itself is unchanged; the filter applies to the edge.
 
-Facets are a DQL feature. GraphQL in 0.2.0 does not expose facet syntax — model
+Facets are a DQL feature. GraphQL in 0.2.1 does not expose facet syntax — model
 relationship properties as nodes or as separate predicates when the GraphQL
 layer needs them.
 

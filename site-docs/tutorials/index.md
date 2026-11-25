@@ -22,7 +22,7 @@ specific movie→actor edge. Query them with `@facets(...)`:
 acted_in @facets(role, billing) { name }
 ```
 
-Facets are a DQL feature. GraphQL in 0.2.0 does not expose facet syntax; model
+Facets are a DQL feature. GraphQL in 0.2.1 does not expose facet syntax; model
 relationship properties as nodes or separate predicates if you need them in
 GraphQL.
 

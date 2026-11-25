@@ -1,6 +1,6 @@
 # DQL and GraphQL queries
 
-Embedded 0.2.0 runs the same DQL executor and GraphQL layer as the standalone
+Embedded 0.2.1 runs the same DQL executor and GraphQL layer as the standalone
 servers, but with single-node semantics: no Raft, zero, worker, ACL, or
 namespaces. Instances are isolated by handle, and graph data lives in the
 instance's posting partition.
@@ -152,7 +152,7 @@ nested child blocks are rejected.
   repeated paths in a cyclic graph matter.
 - Omit `depth` (or set `0`) with `loop: false` for unbounded expansion. The
   engine stops at the 1,000,000-edge query budget.
-- `$depth` and `$loop` variables parse, but embedded 0.2.0 does not expose query
+- `$depth` and `$loop` variables parse, but embedded 0.2.1 does not expose query
   variables; use literals. Standalone accepts them in the variables header.
 
 The `friend` predicate must be declared as `[uid]` (and `@reverse` if you need
@@ -278,7 +278,7 @@ sub.close();
 | `password` | Hashed password | Not indexable |
 | `bigfloat` | Arbitrary-precision decimal | No dedicated index tokenizer |
 | `binary` | Raw bytes | Schema-supported; not exposed in GraphQL |
-| `float32vector` | Float vector | Vector indexes are not supported in embedded 0.2.0 |
+| `float32vector` | Float vector | Vector indexes are not supported in embedded 0.2.1 |
 | `default` | Untyped/auto-derived scalar | Depends on the derived type |
 
 There is **no separate `date` type**: use `datetime` with an RFC3339 value such
@@ -317,7 +317,7 @@ DQL uses `geo` and stores GeoJSON geometries. GraphQL exposes them as:
 | DQL values | RDF literals in mutations; JSON output from queries |
 | GraphQL values | GraphQL scalar/object/list types from the user SDL |
 | Raw KV values | UTF-8 strings in bindings; arbitrary bytes in Rust |
-| Binary graph values | Not exposed in the 0.2.0 GraphQL/DQL envelope |
+| Binary graph values | Not exposed in the 0.2.1 GraphQL/DQL envelope |
 
 ## Errors
 
@@ -329,7 +329,7 @@ DQL uses `geo` and stores GeoJSON geometries. GraphQL exposes them as:
 GraphQL execution errors are returned inside the GraphQL response
 (`response.errors`), not as transport errors.
 
-## 0.2.0 boundaries
+## 0.2.1 boundaries
 
 - Single-node only; no Raft/zero/worker, ACL, or namespaces.
 - DQL alters are additive/updating; drop operations are not exposed.

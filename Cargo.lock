@@ -1086,7 +1086,7 @@ checksum = "11c0bd7d22989969a619bae09147b992a6aa7f31dd4f9d9af6345f533744781f"
 
 [[package]]
 name = "datastreamdb-acl"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "base64 0.23.1",
  "datastreamdb-proto",
@@ -1105,7 +1105,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-algo"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "criterion",
  "datastreamdb-codec",
@@ -1115,7 +1115,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-audit"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "regex",
  "serde",
@@ -1126,7 +1126,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-backup"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "datastreamdb-chunker",
  "datastreamdb-codec",
@@ -1149,7 +1149,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-chunker"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "chrono",
  "criterion",
@@ -1165,7 +1165,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-codec"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "bytes",
  "criterion",
@@ -1175,7 +1175,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "datastreamdb-graphql",
  "datastreamdb-posting",
@@ -1197,7 +1197,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-dql"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "datastreamdb-chunker",
  "datastreamdb-lex",
@@ -1211,7 +1211,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-enc"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "aes",
  "ctr",
@@ -1222,14 +1222,14 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-ffi"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "datastreamdb-core",
 ]
 
 [[package]]
 name = "datastreamdb-filestore"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "axum",
  "chrono",
@@ -1246,7 +1246,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-frontend"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "async-graphql",
  "async-trait",
@@ -1283,7 +1283,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-graphql"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "async-graphql",
  "async-graphql-parser",
@@ -1307,14 +1307,14 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-lex"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "thiserror 2.0.21",
 ]
 
 [[package]]
 name = "datastreamdb-loader"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "datastreamdb-chunker",
  "datastreamdb-dql",
@@ -1336,7 +1336,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-node"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "datastreamdb-core",
  "napi",
@@ -1346,7 +1346,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-posting"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "bytes",
  "datastreamdb-algo",
@@ -1366,7 +1366,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-proto"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "prost",
  "prost-build",
@@ -1379,7 +1379,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-py"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "datastreamdb-core",
  "pyo3",
@@ -1388,7 +1388,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-query"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "bigdecimal",
  "chrono",
@@ -1414,7 +1414,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-raft"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "bytes",
  "datastreamdb-proto",
@@ -1436,7 +1436,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-schema"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "datastreamdb-lex",
  "datastreamdb-proto",
@@ -1449,7 +1449,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-server"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -1487,7 +1487,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-store"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "fjall",
  "fs2",
@@ -1498,7 +1498,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-task"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "bytes",
  "datastreamdb-algo",
@@ -1519,7 +1519,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-tok"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "blake2",
  "chrono",
@@ -1537,7 +1537,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-types"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "bcrypt",
  "bigdecimal",
@@ -1560,7 +1560,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-worker"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "axum",
  "base64 0.23.1",
@@ -1596,7 +1596,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-x"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "prometheus",
  "serde",
@@ -1606,7 +1606,7 @@ dependencies = [
 
 [[package]]
 name = "datastreamdb-xidmap"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "parking_lot 0.13.0",
 ]
@@ -5580,7 +5580,7 @@ checksum = "3ad82d2a33cdc9674dc7465672f271e096168fcdbe0f799d9e6db8c5892679dc"
 
 [[package]]
 name = "xtask"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "anyhow",
 ]

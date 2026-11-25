@@ -16,7 +16,7 @@ Full developer guide: <https://fab679.github.io/datastreamdb/embedding/python/>
 import json
 from datastreamdb import Instance, version
 
-print(version())  # "0.2.0"
+print(version())  # "0.2.1"
 
 db = Instance("{}")  # isolated in-memory instance
 

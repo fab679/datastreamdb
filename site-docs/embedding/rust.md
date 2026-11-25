@@ -157,7 +157,7 @@ for worker in workers {
 `Instance` is `Send + Sync`. Clone the `Arc` rather than opening the same
 persistent directory twice; the second open fails on the file lock.
 
-## Limitations in 0.2.0
+## Limitations in 0.2.1
 
 - Embedded graph mode is single-node; clustering, ACL, and namespaces require
   the standalone servers.

@@ -7,7 +7,7 @@ pip install datastreamdb
 ```python
 from datastreamdb import Instance, version
 
-print(version())  # "0.2.0"
+print(version())  # "0.2.1"
 ```
 
 ## Open an instance
@@ -128,7 +128,7 @@ The GIL is released around every engine call, so one instance can be shared
 across Python threads. Use a lock only for read-modify-write sequences that
 must be atomic; the engine does not provide compare-and-swap.
 
-## Limitations in 0.2.0
+## Limitations in 0.2.1
 
 - Embedded graph mode is single-node; clustering, ACL, and namespaces require
   the standalone servers.

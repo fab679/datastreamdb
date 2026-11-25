@@ -1,4 +1,4 @@
-# Limitations (0.2.0)
+# Limitations (0.2.1)
 
 What is out of scope and tracked for later releases:
 

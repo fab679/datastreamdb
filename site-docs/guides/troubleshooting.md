@@ -39,7 +39,7 @@ Drop the first handle (after `flush`) before reopening.
 
 **`invalid config JSON` / unknown field rejected.**
 `InstanceConfig` rejects unknown fields so version skew fails fast.
-Only `data_dir` and `tenant` exist in 0.2.0.
+Only `data_dir` and `tenant` exist in 0.2.1.
 
 **`null` from `get`.**
 Missing keys read as `null` (TypeScript), `None` (Python/Rust),

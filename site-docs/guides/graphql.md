@@ -1,6 +1,6 @@
 # GraphQL data layer
 
-Status in 0.2.0: the GraphQL engine ships as a library
+Status in 0.2.1: the GraphQL engine ships as a library
 (`datastreamdb-graphql`) and is exposed through embedded instances
 (`set_graphql_schema` / `graphql` / `graphql_subscribe`). The standalone
 server has no public `/graphql` route — the

@@ -77,7 +77,7 @@ A missing key returns `"value": null` (Python `None`, Rust `None`).
 - `prefix` defaults to `""` (scan from the beginning).
 - `limit` defaults to **1000** and is clamped to **100,000**.
 - Results are in key order.
-- There is **no cursor** in 0.2.0. To page, use a narrower prefix or raise
+- There is **no cursor** in 0.2.1. To page, use a narrower prefix or raise
   `limit`; the engine does not return a continuation token.
 
 For large collections, split keys into narrower prefixes

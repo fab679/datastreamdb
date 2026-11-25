@@ -16,9 +16,9 @@ release. Graph mutations commit before the call returns.
 | Python | `datastreamdb.Instance` | `pip install datastreamdb` |
 | C | `datastreamdb_handle_t*` | release asset: `libdatastreamdb_ffi.a` + `datastreamdb.h` |
 
-## What 0.2.0 supports
+## What 0.2.1 supports
 
-| Capability | Embedded 0.2.0 | Standalone servers |
+| Capability | Embedded 0.2.1 | Standalone servers |
 |---|---|---|
 | Open multiple isolated instances in one process | Yes | N/A |
 | DQL relationship/pattern queries | Yes | Yes |
@@ -57,7 +57,7 @@ fast on version skew.
 
 ## What you get
 
-Embedded 0.2.0 runs the same graph engine as the standalone servers:
+Embedded 0.2.1 runs the same graph engine as the standalone servers:
 
 | Capability | Embedded API |
 |---|---|
@@ -120,7 +120,7 @@ type and tokenizer table is in [DQL and GraphQL](queries.md#supported-types).
 
 ## Error handling
 
-Errors are language-native in 0.2.0 — there is no JSON error envelope.
+Errors are language-native in 0.2.1 — there is no JSON error envelope.
 
 | Binding | Failure surface |
 |---|---|

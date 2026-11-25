@@ -82,13 +82,13 @@ not part of the graph model and should not be used for graph records.
 | `flush` | `{"op":"flush"}` | `{ok:true}` |
 
 `scan` returns keys in order. `limit` defaults to 1000 and clamps to 100,000;
-there is no continuation cursor in 0.2.0. `batch` applies all puts/deletes
+there is no continuation cursor in 0.2.1. `batch` applies all puts/deletes
 atomically. `delete` is idempotent. See `site-docs/embedding/key-value.md` for
 the value and key rules.
 
 ## Errors
 
-Errors are language-native; there is no JSON error envelope in 0.2.0.
+Errors are language-native; there is no JSON error envelope in 0.2.1.
 
 - Rust: `Result<_, datastreamdb_core::CoreError>`.
 - TypeScript: thrown `Error`.

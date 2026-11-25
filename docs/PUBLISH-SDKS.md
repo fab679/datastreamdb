@@ -1,4 +1,4 @@
-# Publishing the SDKs (0.2.0)
+# Publishing the SDKs (0.2.1)
 
 How to ship the three integration packages plus the Rust crates.
 Do the crates first — the Node and Python builds compile against
@@ -7,7 +7,7 @@ crates.io.
 
 Prerequisites (all three): accounts and tokens for
 [crates.io](https://crates.io), [npm](https://www.npmjs.com), and
-[PyPI](https://pypi.org). Versions are aligned at `0.2.0`:
+[PyPI](https://pypi.org). Versions are aligned at `0.2.1`:
 workspace `Cargo.toml`, `bindings/node/package.json`,
 `bindings/python/pyproject.toml`.
 
@@ -70,7 +70,7 @@ maturin publish                    # needs a PyPI token (or OIDC trusted publish
 Test install from a clean venv first:
 
 ```sh
-pip install target/wheels/datastreamdb-0.2.0-*.whl
+pip install target/wheels/datastreamdb-0.2.1-*.whl
 python -c "import datastreamdb; print(datastreamdb.version())"
 ```
 
@@ -93,8 +93,8 @@ on Linux).
 
 ## Checklist
 
-- [x] `cargo publish` loop green (28 crates, in order above)
-- [x] `npm publish` green (`@datastreamdb/core@0.2.0`)
-- [x] `maturin publish` green (`datastreamdb==0.2.0`)
-- [x] GitHub release `v0.2.0` with the C assets attached
-- [x] Tag: `git tag v0.2.0 && git push origin v0.2.0`
+- [ ] `cargo publish` loop green (28 crates, in order above)
+- [ ] `npm publish` green (`@datastreamdb/core@0.2.1`)
+- [ ] `maturin publish` green (`datastreamdb==0.2.1`)
+- [ ] GitHub release `v0.2.1` with the C assets attached
+- [ ] Tag: `git tag v0.2.1 && git push origin v0.2.1`

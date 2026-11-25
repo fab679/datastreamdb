@@ -285,7 +285,7 @@ envelope example.
 === "C"
 
     Download `libdatastreamdb_ffi.a` and `datastreamdb.h` from the
-    [v0.2.0 release](https://github.com/fab679/datastreamdb/releases/tag/v0.2.0).
+    [v0.2.1 release](https://github.com/fab679/datastreamdb/releases/tag/v0.2.1).
 
     ```c
     datastreamdb_handle_t *db = NULL;
@@ -409,7 +409,7 @@ estimate: int @index(int) .
 - Use `datetime` for dates; there is no separate `date` type.
 - RFC3339 literals: `"2026-11-30T17:00:00Z"^^<xs:dateTime>`.
 - Datetime index tokenizers are `year`, `month`, `day`, and `hour` (there is no
-  exact `datetime` tokenizer in 0.2.0).
+  exact `datetime` tokenizer in 0.2.1).
 
 ---
 

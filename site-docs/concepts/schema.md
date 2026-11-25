@@ -101,7 +101,7 @@ budget: int @index(int) .
 
 Removing schema is a separate operation. Standalone servers expose
 `drop_attr`, `drop_all`, and the other drop forms through `POST /alter`; embedded
-0.2.0 supports additive alters only (see [Limitations](../reference/limitations.md)).
+0.2.1 supports additive alters only (see [Limitations](../reference/limitations.md)).
 
 ## Where schema lives
 

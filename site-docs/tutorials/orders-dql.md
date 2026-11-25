@@ -248,7 +248,7 @@ product.
 === "C"
 
     Download `libdatastreamdb_ffi.a` and `datastreamdb.h` from the
-    [v0.2.0 release](https://github.com/fab679/datastreamdb/releases/tag/v0.2.0).
+    [v0.2.1 release](https://github.com/fab679/datastreamdb/releases/tag/v0.2.1).
 
     ```c
     datastreamdb_handle_t *db = NULL;

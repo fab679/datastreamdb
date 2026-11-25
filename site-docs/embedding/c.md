@@ -135,7 +135,7 @@ if (datastreamdb_execute(db, (const uint8_t *)req, strlen(req),
 - Handles are `Send + Sync`; calls may run on any thread.
 - `datastreamdb_last_error` is per-thread.
 
-## Limitations in 0.2.0
+## Limitations in 0.2.1
 
 - Embedded graph mode is single-node; clustering, ACL, and namespaces require
   the standalone servers.

@@ -31,7 +31,7 @@ Reference: `dgraph-main/` at repo root (module `github.com/dgraph-io/dgraph/v25`
 | `dgraph/cmd/bulk`, `dgraph/cmd/live` | `datastreamdb-loader` | **M6-loaders done** (live streaming + batch commits, bulk + Go-parity schema inference, UID seeding/`BumpTo`/oracle advance, encrypted inputs; 11 tests; remote gRPC + sharded map/reduce deferred) |
 | `worker` enc plumbing | `datastreamdb-worker::backup` + `alpha` | **M6-enc done** (`--encryption-key-file` → encrypted backup chains with Go checks, encrypted exports, keyed restore; 2 tests; encrypted WAL deferred) |
 | `badger` (dep) | `datastreamdb-store` | **M1 done** (batches, range delete, locking, close) |
-| (new) | `datastreamdb-core` | **0.2.0** (typed KV + DQL relationships/patterns + GraphQL queries/mutations/poll subscriptions + schema persistence) |
+| (new) | `datastreamdb-core` | **0.2.1** (typed KV + DQL relationships/patterns + GraphQL queries/mutations/poll subscriptions + schema persistence) |
 | (new) | `datastreamdb-ffi` | **M1 done** (`datastreamdb.h`, isolation tests, C smoke) |
 | (new) | `bindings/node`, `bindings/python` | **M1 done** (built + smoke-tested, publish deferred) |
 | `datastreamdbapi` | surfaced via `datastreamdb-core` API | planned |

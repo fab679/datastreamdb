@@ -17,7 +17,7 @@ import { Instance, version } from '@datastreamdb/core'
 ```js
 import { Instance, version } from '@datastreamdb/core'
 
-console.log(version()) // "0.2.0"
+console.log(version()) // "0.2.1"
 
 const memory = new Instance('{}')
 const persistent = new Instance(JSON.stringify({
@@ -129,7 +129,7 @@ Blocking engine calls run off the JS thread. Use one instance per JS
 thread/worker; open a separate `Instance` inside each worker rather than
 sharing a native object across isolates.
 
-## Limitations in 0.2.0
+## Limitations in 0.2.1
 
 - Embedded graph mode is single-node; clustering, ACL, and namespaces require
   the standalone servers.

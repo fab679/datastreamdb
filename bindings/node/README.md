@@ -1,7 +1,7 @@
 # @datastreamdb/core
 
 Embedded graph database for Node.js. This package ships the Linux x64 (glibc)
-native addon for DataStreamDB 0.2.0, with DQL and GraphQL in-process.
+native addon for DataStreamDB 0.2.1, with DQL and GraphQL in-process.
 
 ```sh
 npm install @datastreamdb/core
@@ -14,7 +14,7 @@ Full developer guide: <https://fab679.github.io/datastreamdb/embedding/typescrip
 ```js
 import { Instance, version } from '@datastreamdb/core'
 
-console.log(version()) // "0.2.0"
+console.log(version()) // "0.2.1"
 
 const db = new Instance('{}') // isolated in-memory instance
 

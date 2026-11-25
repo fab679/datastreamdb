@@ -76,7 +76,7 @@ let response = db.graphql(
 )?;
 ```
 
-> **0.2.0 scope:** embedded instances support key/value operations plus DQL
+> **0.2.1 scope:** embedded instances support key/value operations plus DQL
 > relationship/pattern queries, DQL mutations, schema alters, and GraphQL
 > queries/mutations/subscriptions. Embedded graph mode is single-node; use the
 > standalone servers for clustering, ACL, and namespaces. See the
