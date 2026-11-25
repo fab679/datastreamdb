@@ -8,11 +8,12 @@ servers or embedded in-process with many isolated instances.
 - **Embedded**: open any number of isolated instances from Rust,
   TypeScript, Python, or C with no servers and no ports.
 
-!!! note "0.1.0 scope"
-    The embedded instance currently speaks key-value operations
-    (`put`/`get`/`delete`/`scan`/`batch`). Full DQL through the
-    embedded handle is the next milestone; DQL today runs against
-    the standalone servers. See [Limitations](limitations.md).
+!!! note "0.2.0 scope"
+    Embedded instances support DQL relationship/pattern queries, DQL
+    mutations, schema alters, and GraphQL queries/mutations/subscriptions,
+    alongside the key-value API. Embedded graph mode is single-node; use the
+    standalone servers for clustering, ACL, and namespaces. See
+    [DQL & GraphQL](embedding/queries.md) and [Limitations](limitations.md).
 
 ## Install
 
@@ -20,7 +21,7 @@ servers or embedded in-process with many isolated instances.
 
     ```toml
     [dependencies]
-    datastreamdb-core = "0.1"
+    datastreamdb-core = "0.2"
     ```
 
 === "TypeScript (embedded)"

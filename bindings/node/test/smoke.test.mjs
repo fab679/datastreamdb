@@ -30,4 +30,34 @@ describe('datastreamdb-node', () => {
     assert.equal(res.ok, true)
     assert.equal(res.instance, db.id())
   })
+
+  it('runs embedded DQL relationship queries', () => {
+    const db = new Instance('{}')
+    db.dqlAlter('name: string @index(exact) .\nfriend: [uid] @reverse .\ntype Person {\n name\n friend\n}')
+    db.dqlMutate('{ set { _:a <name> "Ada" .\n_:b <name> "Bob" .\n_:a <friend> _:b .\n} }')
+    const result = db.dqlQuery('{ people(func: eq(name, "Ada")) { name friend { name } } }')
+    assert.match(result, /Ada/)
+    assert.match(result, /Bob/)
+  })
+
+  it('runs embedded GraphQL and subscriptions', () => {
+    const db = new Instance('{}')
+    db.setGraphqlSchema(`
+      type Post @withSubscription {
+        id: ID!
+        title: String @search(by: [term])
+      }
+    `)
+    const added = JSON.parse(db.graphql('mutation { addPost(input: [{title: "Hello"}]) { numUids } }'))
+    assert.equal(added.data.addPost.numUids, 1)
+
+    const sub = db.graphqlSubscribe('subscription { queryPost { title } }')
+    const initial = JSON.parse(db.graphqlNext(sub, 0))
+    assert.equal(initial.changed, true)
+
+    db.graphql('mutation { addPost(input: [{title: "Second"}]) { numUids } }')
+    const changed = JSON.parse(db.graphqlNext(sub, 1000))
+    assert.equal(changed.changed, true)
+    assert.equal(db.graphqlUnsubscribe(sub), true)
+  })
 })

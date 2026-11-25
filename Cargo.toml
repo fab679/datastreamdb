@@ -3,7 +3,7 @@ resolver = "2"
 members = ["crates/*", "bindings/node", "bindings/python", "tools/xtask"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.85"
 license = "Apache-2.0"
@@ -108,34 +108,34 @@ insta = "1.49.0"
 tempfile = "3.27.0"
 
 # internal crates
-datastreamdb-core = { path = "crates/datastreamdb-core", version = "0.1.0" }
-datastreamdb-x = { path = "crates/datastreamdb-x", version = "0.1.0" }
-datastreamdb-lex = { path = "crates/datastreamdb-lex", version = "0.1.0" }
-datastreamdb-types = { path = "crates/datastreamdb-types", version = "0.1.0" }
-datastreamdb-codec = { path = "crates/datastreamdb-codec", version = "0.1.0" }
-datastreamdb-algo = { path = "crates/datastreamdb-algo", version = "0.1.0" }
-datastreamdb-tok = { path = "crates/datastreamdb-tok", version = "0.1.0" }
-datastreamdb-chunker = { path = "crates/datastreamdb-chunker", version = "0.1.0" }
-datastreamdb-schema = { path = "crates/datastreamdb-schema", version = "0.1.0" }
-datastreamdb-dql = { path = "crates/datastreamdb-dql", version = "0.1.0" }
-datastreamdb-graphql = { path = "crates/datastreamdb-graphql", version = "0.1.0" }
-datastreamdb-posting = { path = "crates/datastreamdb-posting", version = "0.1.0" }
-datastreamdb-xidmap = { path = "crates/datastreamdb-xidmap", version = "0.1.0" }
-datastreamdb-task = { path = "crates/datastreamdb-task", version = "0.1.0" }
-datastreamdb-query = { path = "crates/datastreamdb-query", version = "0.1.0" }
-datastreamdb-worker = { path = "crates/datastreamdb-worker", version = "0.1.0" }
-datastreamdb-frontend = { path = "crates/datastreamdb-frontend", version = "0.1.0" }
-datastreamdb-raft = { path = "crates/datastreamdb-raft", version = "0.1.0" }
-datastreamdb-proto = { path = "crates/datastreamdb-proto", version = "0.1.0" }
-datastreamdb-acl = { path = "crates/datastreamdb-acl", version = "0.1.0" }
-datastreamdb-audit = { path = "crates/datastreamdb-audit", version = "0.1.0" }
-datastreamdb-enc = { path = "crates/datastreamdb-enc", version = "0.1.0" }
-datastreamdb-backup = { path = "crates/datastreamdb-backup", version = "0.1.0" }
-datastreamdb-filestore = { path = "crates/datastreamdb-filestore", version = "0.1.0" }
-datastreamdb-store = { path = "crates/datastreamdb-store", version = "0.1.0" }
-datastreamdb-server = { path = "crates/datastreamdb-server", version = "0.1.0" }
-datastreamdb-ffi = { path = "crates/datastreamdb-ffi", version = "0.1.0" }
-datastreamdb-loader = { path = "crates/datastreamdb-loader", version = "0.1.0" }
+datastreamdb-core = { path = "crates/datastreamdb-core", version = "0.2.0" }
+datastreamdb-x = { path = "crates/datastreamdb-x", version = "0.2.0" }
+datastreamdb-lex = { path = "crates/datastreamdb-lex", version = "0.2.0" }
+datastreamdb-types = { path = "crates/datastreamdb-types", version = "0.2.0" }
+datastreamdb-codec = { path = "crates/datastreamdb-codec", version = "0.2.0" }
+datastreamdb-algo = { path = "crates/datastreamdb-algo", version = "0.2.0" }
+datastreamdb-tok = { path = "crates/datastreamdb-tok", version = "0.2.0" }
+datastreamdb-chunker = { path = "crates/datastreamdb-chunker", version = "0.2.0" }
+datastreamdb-schema = { path = "crates/datastreamdb-schema", version = "0.2.0" }
+datastreamdb-dql = { path = "crates/datastreamdb-dql", version = "0.2.0" }
+datastreamdb-graphql = { path = "crates/datastreamdb-graphql", version = "0.2.0" }
+datastreamdb-posting = { path = "crates/datastreamdb-posting", version = "0.2.0" }
+datastreamdb-xidmap = { path = "crates/datastreamdb-xidmap", version = "0.2.0" }
+datastreamdb-task = { path = "crates/datastreamdb-task", version = "0.2.0" }
+datastreamdb-query = { path = "crates/datastreamdb-query", version = "0.2.0" }
+datastreamdb-worker = { path = "crates/datastreamdb-worker", version = "0.2.0" }
+datastreamdb-frontend = { path = "crates/datastreamdb-frontend", version = "0.2.0" }
+datastreamdb-raft = { path = "crates/datastreamdb-raft", version = "0.2.0" }
+datastreamdb-proto = { path = "crates/datastreamdb-proto", version = "0.2.0" }
+datastreamdb-acl = { path = "crates/datastreamdb-acl", version = "0.2.0" }
+datastreamdb-audit = { path = "crates/datastreamdb-audit", version = "0.2.0" }
+datastreamdb-enc = { path = "crates/datastreamdb-enc", version = "0.2.0" }
+datastreamdb-backup = { path = "crates/datastreamdb-backup", version = "0.2.0" }
+datastreamdb-filestore = { path = "crates/datastreamdb-filestore", version = "0.2.0" }
+datastreamdb-store = { path = "crates/datastreamdb-store", version = "0.2.0" }
+datastreamdb-server = { path = "crates/datastreamdb-server", version = "0.2.0" }
+datastreamdb-ffi = { path = "crates/datastreamdb-ffi", version = "0.2.0" }
+datastreamdb-loader = { path = "crates/datastreamdb-loader", version = "0.2.0" }
 
 [workspace.lints.rust]
 missing_docs = "warn"

@@ -14,6 +14,7 @@ crate-type = ["cdylib"]
 datastreamdb-core.workspace = true
 napi.workspace = true
 napi-derive.workspace = true
+serde_json.workspace = true
 
 [lints]
 workspace = true

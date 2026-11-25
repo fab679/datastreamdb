@@ -1,7 +1,7 @@
 # @datastreamdb/core
 
 Embedded multi-instance graph database for Node.js. This package ships the
-Linux x64 (glibc) native addon for DataStreamDB 0.1.0.
+Linux x64 (glibc) native addon for DataStreamDB 0.2.0.
 
 ```sh
 npm install @datastreamdb/core
@@ -14,7 +14,7 @@ Full developer guide: <https://fab679.github.io/datastreamdb/embedding/typescrip
 ```js
 import { Instance, version } from '@datastreamdb/core'
 
-console.log(version()) // "0.1.0"
+console.log(version()) // "0.2.0"
 
 const db = new Instance('{}') // isolated in-memory instance
 db.put('user:1', JSON.stringify({ name: 'Ada', age: 36 }))
@@ -50,7 +50,7 @@ for (const { key, value } of result.pairs) {
 ```
 
 Keys are returned in lexicographic order. `limit` defaults to 1000 and is
-clamped to 100,000. There is no continuation cursor in 0.1.0.
+clamped to 100,000. There is no continuation cursor in 0.2.0.
 
 ## Atomic writes
 
@@ -79,9 +79,23 @@ console.log(result.applied) // 3
 | `execute(requestJson: string): string` | `ping`, `put`, `get`, `delete`, `scan`, `batch`, `flush`. |
 | `version(): string` | Binding/engine version. |
 
-Values are strings in this binding. Serialize JSON documents with
-`JSON.stringify`; base64-encode binary data. Embedded mode is key/value only
-in 0.1.0 — DQL and GraphQL run against the standalone servers.
+Values are strings in the raw KV API. Serialize JSON documents with
+`JSON.stringify`; base64-encode binary data.
+
+## DQL and GraphQL
+
+```js
+db.dqlAlter('name: string @index(exact) .\nfriend: [uid] @reverse .\ntype Person {\n name\n friend\n}')
+db.dqlMutate('{ set { _:a <name> "Ada" .\n_:b <name> "Bob" .\n_:a <friend> _:b .\n} }')
+console.log(db.dqlQuery('{ people(func: eq(name, "Ada")) { name friend { name } } }'))
+
+db.setGraphqlSchema('type Person { id: ID! name: String @search(by: [term]) }')
+console.log(db.graphql('{ queryPerson { name } }'))
+```
+
+GraphQL subscriptions are poll-based via `graphqlSubscribe`, `graphqlNext`, and
+`graphqlUnsubscribe`. Embedded graph mode is single-node; see the full guide at
+<https://fab679.github.io/datastreamdb/embedding/queries/>.
 
 ## Build and test
 

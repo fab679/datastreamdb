@@ -141,7 +141,11 @@ async fn poll_next(
 }
 
 /// Rewrites the leading `subscription` keyword to `query` (padded).
-fn rewrite_subscription_keyword(query: &str) -> String {
+///
+/// The embedded subscription handle uses this to execute a subscription root
+/// through the normal query resolver while preserving source positions.
+#[must_use]
+pub fn rewrite_subscription_keyword(query: &str) -> String {
     let bytes = query.as_bytes();
     let mut i = 0;
     while i < bytes.len() {

@@ -17,7 +17,7 @@ import { Instance, version } from '@datastreamdb/core'
 ```js
 import { Instance, version } from '@datastreamdb/core'
 
-console.log(version()) // "0.1.0"
+console.log(version()) // "0.2.0"
 
 const memory = new Instance('{}')
 const persistent = new Instance(JSON.stringify({
@@ -32,6 +32,29 @@ console.log(persistent.id(), persistent.backend()) // uuid, 'fjall'
 - `{}` opens an isolated in-memory instance.
 - `data_dir` selects the persistent fjall backend and takes an exclusive lock.
 - `tenant` is a label, not an isolation boundary.
+
+## DQL and GraphQL
+
+```js
+db.dqlAlter(`
+  name: string @index(exact) .
+  friend: [uid] @reverse .
+  type Person { name friend }
+`)
+db.dqlMutate('{ set { _:a <name> "Ada" . _:b <name> "Bob" . _:a <friend> _:b . } }')
+console.log(db.dqlQuery('{ people(func: eq(name, "Ada")) { name friend { name } } }'))
+
+db.setGraphqlSchema(`
+  type Person {
+    id: ID!
+    name: String @search(by: [term])
+  }
+`)
+console.log(db.graphql('{ queryPerson { name } }'))
+```
+
+See [DQL & GraphQL](queries.md) for pattern filters, mutations, and
+poll-based subscriptions.
 
 ## Supported types
 
@@ -149,9 +172,11 @@ Blocking engine calls run off the JS thread. Use one instance per JS
 thread/worker; open a separate `Instance` inside each worker rather than
 sharing a native object across isolates.
 
-## Limitations in 0.1.0
+## Limitations in 0.2.0
 
-- Embedded mode is key/value only. DQL and GraphQL run against the standalone
-  servers.
-- Values are strings; store binary data as base64.
+- Embedded graph mode is single-node; clustering, ACL, and namespaces require
+  the standalone servers.
+- Raw KV values are strings; store binary data as base64.
+- Raw KV and graph data use separate partitions.
+- GraphQL subscriptions are poll-based; WebSocket push is not exposed.
 - Scans are bounded and have no continuation cursor.

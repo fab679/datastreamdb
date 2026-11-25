@@ -1,9 +1,11 @@
 # GraphQL data layer
 
-Status in 0.1.0: the GraphQL engine ships as **libraries**
-(`datastreamdb-graphql`), not as a served endpoint. There is no
-`/graphql` route yet — only the [Admin API](admin.md) speaks
-GraphQL over HTTP today.
+Status in 0.2.0: the GraphQL engine ships as a library
+(`datastreamdb-graphql`) and is exposed through embedded instances
+(`setGraphqlSchema` / `graphql` / `graphqlSubscribe`). The standalone
+server still has no public `/graphql` route — only the
+[Admin API](admin.md) speaks GraphQL over HTTP today. See
+[DQL & GraphQL](embedding/queries.md) for embedded examples.
 
 What the crates do:
 

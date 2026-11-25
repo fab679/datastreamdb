@@ -2,7 +2,7 @@
 
 ```toml
 [dependencies]
-datastreamdb-core = "0.1"
+datastreamdb-core = "0.2"
 serde_json = "1" # only if you store JSON documents
 ```
 
@@ -34,6 +34,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - A directory selects fjall and takes an exclusive `LOCK`.
 - `tenant` is a label, not an isolation boundary. Use separate instances for
   separate data.
+
+## DQL and GraphQL
+
+Embedded 0.2.0 includes the DQL executor and GraphQL layer:
+
+```rust
+db.dql_alter(r#"
+    name: string @index(exact) .
+    friend: [uid] @reverse .
+    type Person { name friend }
+"#)?;
+db.dql_mutate(r#"{
+    set {
+        _:a <name> "Ada" .
+        _:b <name> "Bob" .
+        _:a <friend> _:b .
+    }
+}"#)?;
+
+let people = db.dql_query(r#"
+    { people(func: eq(name, "Ada")) { name friend { name } } }
+"#)?;
+println!("{people}");
+
+db.set_graphql_schema(r#"
+    type Person {
+        id: ID!
+        name: String @search(by: [term])
+    }
+"#)?;
+let response = db.graphql(
+    "{ queryPerson { name } }",
+    None,
+    serde_json::json!({}),
+    &std::collections::HashMap::new(),
+)?;
+```
+
+See [DQL & GraphQL](queries.md) for patterns, mutations, and subscriptions.
 
 ## Supported types
 
@@ -167,10 +206,13 @@ for worker in workers {
 `Instance` is `Send + Sync`. Use `Arc` clones rather than opening the same
 persistent directory twice; the second open fails on the file lock.
 
-## Limitations in 0.1.0
+## Limitations in 0.2.0
 
-- Embedded mode is key/value only. DQL and GraphQL run against the standalone
-  servers.
+- Embedded graph mode is single-node; clustering, ACL, and namespaces require
+  the standalone servers.
 - Prefix scans are bounded and have no continuation cursor.
-- The JSON envelope is string-only; use the typed `put`/`get` API for binary
-  values.
+- Raw KV and graph data use separate partitions, so `get` does not see DQL
+  predicates.
+- GraphQL subscriptions are poll-based; WebSocket push is not exposed.
+- DQL alters are additive/updating; drop operations and upserts are not
+  exposed in the embedded envelope.

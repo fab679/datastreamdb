@@ -57,9 +57,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-> **0.1.0 scope:** embedded instances expose key/value operations
-> (`put`/`get`/`delete`/`scan`/`batch`/`flush`). DQL and GraphQL run against
-> the standalone servers. See the [embedded developer guide](https://fab679.github.io/datastreamdb/embedding/).
+Embedded DQL and GraphQL:
+
+```rust
+db.dql_alter("name: string @index(exact) .\nfriend: [uid] @reverse .\ntype Person {\n name\n friend\n}")?;
+db.dql_mutate(r#"{ set { _:a <name> "Ada" .
+_:b <name> "Bob" .
+_:a <friend> _:b .
+} }"#)?;
+let people = db.dql_query(r#"{ people(func: eq(name, "Ada")) { name friend { name } } }"#)?;
+
+db.set_graphql_schema("type Person { id: ID! name: String @search(by: [term]) }")?;
+let response = db.graphql(
+    "{ queryPerson { name } }",
+    None,
+    serde_json::json!({}),
+    &std::collections::HashMap::new(),
+)?;
+```
+
+> **0.2.0 scope:** embedded instances support key/value operations plus DQL
+> relationship/pattern queries, DQL mutations, schema alters, and GraphQL
+> queries/mutations/subscriptions. Embedded graph mode is single-node; use the
+> standalone servers for clustering, ACL, and namespaces. See the
+> [embedded developer guide](https://fab679.github.io/datastreamdb/embedding/)
+> and [DQL & GraphQL examples](https://fab679.github.io/datastreamdb/embedding/queries/).
 
 TypeScript and Python quickstarts live in [`bindings/node`](bindings/node/README.md) and
 [`bindings/python`](bindings/python/README.md).

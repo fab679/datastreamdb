@@ -7,7 +7,7 @@ pip install datastreamdb
 ```python
 from datastreamdb import Instance, version
 
-print(version())  # "0.1.0"
+print(version())  # "0.2.0"
 ```
 
 ## Open an instance
@@ -29,6 +29,29 @@ print(persistent.id(), persistent.backend()) # uuid, "fjall"
 - `{}` opens an isolated in-memory instance.
 - `data_dir` selects the persistent fjall backend and takes an exclusive lock.
 - `tenant` is a label, not an isolation boundary.
+
+## DQL and GraphQL
+
+```python
+db.dql_alter("""
+name: string @index(exact) .
+friend: [uid] @reverse .
+type Person { name friend }
+""")
+db.dql_mutate('{ set { _:a <name> "Ada" . _:b <name> "Bob" . _:a <friend> _:b . } }')
+print(db.dql_query('{ people(func: eq(name, "Ada")) { name friend { name } } }'))
+
+db.set_graphql_schema("""
+type Person {
+  id: ID!
+  name: String @search(by: [term])
+}
+""")
+print(db.graphql("{ queryPerson { name } }"))
+```
+
+See [DQL & GraphQL](queries.md) for pattern filters, mutations, and
+poll-based subscriptions.
 
 ## Supported types
 
@@ -142,9 +165,11 @@ The GIL is released around every engine call, so one instance can be shared
 across Python threads. Use a lock only for read-modify-write sequences that
 must be atomic; the engine does not provide compare-and-swap.
 
-## Limitations in 0.1.0
+## Limitations in 0.2.0
 
-- Embedded mode is key/value only. DQL and GraphQL run against the standalone
-  servers.
-- Values are strings; store binary data as base64.
+- Embedded graph mode is single-node; clustering, ACL, and namespaces require
+  the standalone servers.
+- Raw KV values are strings; store binary data as base64.
+- Raw KV and graph data use separate partitions.
+- GraphQL subscriptions are poll-based; WebSocket push is not exposed.
 - Scans are bounded and have no continuation cursor.

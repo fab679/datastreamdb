@@ -1,9 +1,15 @@
-# Limitations (0.1.0)
+# Limitations (0.2.0)
 
-What is out of scope and tracked for 0.2.0:
+What is out of scope and tracked for later releases:
 
-- **Embedded DQL**: the embedded handle speaks key-value ops only.
-  Graph queries need the standalone servers for now.
+- **Embedded graph mode is single-node**: no Raft/zero/worker, ACL, or
+  namespaces. Use the standalone servers for those.
+- **Embedded DQL scope**: relationship/pattern queries, set/delete mutations,
+  and additive schema alters are supported. Drop operations, upserts, and
+  query variables are not exposed yet.
+- **Embedded GraphQL scope**: queries, mutations, and poll-based subscriptions.
+  No WebSocket push, `@auth`, `@custom` HTTP/lambda resolvers, remote schemas,
+  or vector indexes.
 - **Admin epic remainder**: schema/config/user/group mutations,
   drain, shutdown, async backup tasks with task ids,
   all-namespaces export, list-backups.
@@ -14,7 +20,7 @@ What is out of scope and tracked for 0.2.0:
   transport.
 - **Storage**: no encrypted WAL.
 - **Loaders**: no remote live-load, no sharded bulk.
-- **GraphQL**: no JWK fetch, lambda/custom HTTP resolvers, or
+- **GraphQL server extras**: no JWK fetch, lambda/custom HTTP resolvers, or
   remote schemas.
 - **Testing**: no Jepsen runs yet.
 

@@ -41,14 +41,14 @@ The embedded engine is an ordered, partition-scoped key/value store.
 | Value (TS/Python/C envelope) | UTF-8 string | JSON values must be strings. |
 | JSON document | serialize to string/bytes | `serde_json`, `JSON.stringify`, `json.dumps`. |
 | Binary (TS/Python/C) | base64 string | The envelope has no byte-array value. |
-| Numbers/bools/dates | inside a JSON string | No native scalar value types in 0.1.0. |
+| Numbers/bools/dates | inside a JSON string | No native scalar value types in the KV envelope. |
 
 Use key prefixes to model collections (`user:0001`, `post:0001`). Zero-pad
 numeric ids when lexicographic order matters.
 
 ## Requests
 
-M1 envelope is JSON over the handle (`execute`):
+Envelope over the handle (`execute`):
 
 | `op` | Request | Success response |
 |---|---|---|
@@ -59,22 +59,41 @@ M1 envelope is JSON over the handle (`execute`):
 | `scan` | `prefix`, `limit?` | `{ok:true, pairs:[{key,value}]}` |
 | `batch` | `puts[]`, `deletes[]` | `{ok:true, applied:n}` |
 | `flush` | `{"op":"flush"}` | `{ok:true}` |
+| `dql_query` | `query` | `{ok:true, data:<json>}` |
+| `dql_mutate` | `query` | `{ok:true, uids:{blank:uid}}` |
+| `dql_alter` | `schema` | `{ok:true}` |
+| `set_graphql_schema` | `sdl` | `{ok:true}` |
+| `graphql_schema` | — | `{ok:true, sdl:string-or-null}` |
+| `graphql` | `query`, `operation?`, `variables?`, `headers?` | `{ok:true, response:{data,errors}}` |
+| `graphql_subscribe` | `query`, `variables?`, `headers?`, `poll_ms?` | `{ok:true, id, response}` |
+| `graphql_next` | `id`, `wait_ms?` | `{ok:true, changed, closed, response?}` |
+| `graphql_unsubscribe` | `id` | `{ok:true, removed}` |
 
 ```json
 { "op": "batch", "puts": [{ "key": "n", "value": "Ada" }], "deletes": [] }
 ```
 
 `scan` returns keys in order. `limit` defaults to 1000 and clamps to 100,000;
-there is no continuation cursor in 0.1.0. `batch` applies all puts/deletes
+there is no continuation cursor in 0.2.0. `batch` applies all puts/deletes
 atomically. `delete` is idempotent.
 
-DQL/GraphQL engines exist as crates (`datastreamdb-query`,
-`datastreamdb-graphql`); embedded envelope ops for them are future work. Use
-the standalone servers for DQL and GraphQL today.
+Embedded DQL and GraphQL are single-node but use the same executor and GraphQL
+layer as the standalone servers:
+
+```rust
+db.dql_alter("name: string @index(exact) . friend: [uid] @reverse . type Person { name friend }")?;
+db.dql_mutate(r#"{ set { _:a <name> "Ada" . _:b <name> "Bob" . _:a <friend> _:b . } }"#)?;
+let people = db.dql_query(r#"{ people(func: eq(name, "Ada")) { name friend { name } } }"#)?;
+```
+
+GraphQL subscriptions are poll-based (`graphql_subscribe` / `graphql_next` /
+`graphql_unsubscribe`); WebSocket push remains server work. See
+`site-docs/embedding/queries.md` for relationship, pattern, GraphQL, and
+subscription examples.
 
 ## Errors
 
-Errors are language-native; there is no JSON error envelope in 0.1.0.
+Errors are language-native; there is no JSON error envelope in 0.2.0.
 
 - Rust: `Result<_, datastreamdb_core::CoreError>`.
 - TypeScript: thrown `Error`.

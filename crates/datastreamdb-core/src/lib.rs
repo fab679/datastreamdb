@@ -10,6 +10,10 @@
 
 #![warn(missing_docs)]
 
+#[cfg(feature = "query")]
+use std::collections::HashMap;
+#[cfg(feature = "graphql")]
+use std::time::Duration;
 use std::{
     path::PathBuf,
     sync::{
@@ -23,7 +27,28 @@ use datastreamdb_store::FjallBackend;
 use datastreamdb_store::{Backend, MemoryBackend};
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "query")]
+mod graph;
+#[cfg(feature = "query")]
+use graph::GraphEngine;
+#[cfg(feature = "graphql")]
+pub use graph::{Subscription, SubscriptionEvent};
+
 pub use datastreamdb_store::{KvPair, WriteBatch, WriteOp};
+
+/// Meta partition for embedded engine state (DQL/GraphQL schema history).
+#[cfg(feature = "query")]
+pub const META_PARTITION: &str = graph::META_PARTITION;
+
+/// Default GraphQL subscription poll interval.
+#[cfg(feature = "graphql")]
+pub const DEFAULT_GRAPHQL_POLL: Duration = Duration::from_millis(100);
+#[cfg(feature = "graphql")]
+const DEFAULT_GRAPHQL_POLL_MS: u64 = 100;
+
+/// Maximum blocking wait for a GraphQL subscription poll.
+#[cfg(feature = "graphql")]
+pub const MAX_GRAPHQL_WAIT: Duration = Duration::from_secs(30);
 
 /// Default partition for instance key operations.
 pub const DEFAULT_PARTITION: &str = "default";
@@ -43,6 +68,22 @@ pub enum CoreError {
     /// Storage failure.
     #[error("storage failure: {0}")]
     Store(#[from] datastreamdb_store::StoreError),
+    /// DQL parse/execution failure.
+    #[cfg(feature = "query")]
+    #[error("query failed: {0}")]
+    Query(String),
+    /// Schema parse/apply failure.
+    #[cfg(feature = "query")]
+    #[error("schema failed: {0}")]
+    Schema(String),
+    /// Posting/index rebuild failure.
+    #[cfg(feature = "query")]
+    #[error("posting failed: {0}")]
+    Posting(String),
+    /// GraphQL schema/execution failure.
+    #[cfg(feature = "graphql")]
+    #[error("graphql failed: {0}")]
+    GraphQl(String),
 }
 
 /// Configuration for one [`Instance`]. Unknown fields are rejected.
@@ -87,8 +128,10 @@ impl InstanceConfig {
 pub struct Instance {
     id: uuid::Uuid,
     tenant: String,
-    store: Box<dyn Backend>,
+    store: Arc<dyn Backend>,
     executed: AtomicU64,
+    #[cfg(feature = "query")]
+    graph: Option<Arc<GraphEngine>>,
 }
 
 impl Instance {
@@ -99,12 +142,12 @@ impl Instance {
     ///
     /// Returns [`CoreError`] when the directory cannot be opened or is locked.
     pub fn open(config: InstanceConfig) -> Result<Arc<Self>, CoreError> {
-        let store: Box<dyn Backend> = match config.data_dir {
-            None => Box::new(MemoryBackend::new()),
+        let store: Arc<dyn Backend> = match config.data_dir {
+            None => Arc::new(MemoryBackend::new()),
             Some(dir) => {
                 #[cfg(feature = "fjall")]
                 {
-                    Box::new(FjallBackend::open(&dir)?)
+                    Arc::new(FjallBackend::open(&dir)?)
                 }
                 #[cfg(not(feature = "fjall"))]
                 {
@@ -113,11 +156,15 @@ impl Instance {
                 }
             }
         };
+        #[cfg(feature = "query")]
+        let graph = Some(GraphEngine::open(store.clone())?);
         let instance = Arc::new(Self {
             id: uuid::Uuid::new_v4(),
             tenant: config.tenant,
             store,
             executed: AtomicU64::new(0),
+            #[cfg(feature = "query")]
+            graph,
         });
         tracing::debug!(instance = %instance.id, backend = instance.store.name(), "opened");
         Ok(instance)
@@ -225,15 +272,190 @@ impl Instance {
         Ok(())
     }
 
+    #[cfg(feature = "query")]
+    fn graph(&self) -> Result<&Arc<GraphEngine>, CoreError> {
+        self.graph
+            .as_ref()
+            .ok_or_else(|| CoreError::BadRequest("graph support is not enabled".to_owned()))
+    }
+
+    /// Executes a DQL query and returns the parsed JSON result.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError::Query`] on parse/execution failure.
+    #[cfg(feature = "query")]
+    pub fn dql_query(&self, text: &str) -> Result<serde_json::Value, CoreError> {
+        self.graph()?.dql_query(text)
+    }
+
+    /// Executes a DQL query and returns the raw JSON string.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError::Query`] on parse/execution failure.
+    #[cfg(feature = "query")]
+    pub fn dql_query_json(&self, text: &str) -> Result<String, CoreError> {
+        self.graph()?.dql_query_json(text)
+    }
+
+    /// Applies a DQL set/delete mutation, returning assigned blank-node UIDs.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError::Query`] on parse/execution failure.
+    #[cfg(feature = "query")]
+    pub fn dql_mutate(&self, text: &str) -> Result<HashMap<String, u64>, CoreError> {
+        self.graph()?.dql_mutate(text)
+    }
+
+    /// Applies a DQL mutation and returns `{blank: uid}` JSON.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError::Query`] on parse/execution failure.
+    #[cfg(feature = "query")]
+    pub fn dql_mutate_json(&self, text: &str) -> Result<String, CoreError> {
+        self.graph()?.dql_mutate_json(text)
+    }
+
+    /// Applies additive/updating DQL schema text.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError::Schema`] or [`CoreError::Posting`] on failure.
+    #[cfg(feature = "query")]
+    pub fn dql_alter(&self, schema_text: &str) -> Result<(), CoreError> {
+        self.graph()?.dql_alter(schema_text)
+    }
+
+    /// Installs/replaces the embedded GraphQL schema from original user SDL.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError::GraphQl`] or [`CoreError::Schema`] on failure.
+    #[cfg(feature = "graphql")]
+    pub fn set_graphql_schema(&self, sdl: &str) -> Result<(), CoreError> {
+        self.graph()?.set_graphql_schema(sdl)
+    }
+
+    /// Original GraphQL SDL currently installed, if any.
+    #[cfg(feature = "graphql")]
+    #[must_use]
+    pub fn graphql_schema(&self) -> Option<String> {
+        self.graph.as_ref().and_then(|graph| graph.graphql_schema())
+    }
+
+    /// Executes a GraphQL query or mutation synchronously.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError::GraphQl`] on schema/execution failure.
+    #[cfg(feature = "graphql")]
+    pub fn graphql(
+        &self,
+        query: &str,
+        operation: Option<&str>,
+        variables: serde_json::Value,
+        headers: &HashMap<String, String>,
+    ) -> Result<serde_json::Value, CoreError> {
+        self.graph()?.graphql(query, operation, variables, headers)
+    }
+
+    /// Async GraphQL query/mutation execution.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError::GraphQl`] on schema/execution failure.
+    #[cfg(feature = "graphql")]
+    pub async fn graphql_async(
+        &self,
+        query: &str,
+        operation: Option<&str>,
+        variables: serde_json::Value,
+        headers: &HashMap<String, String>,
+    ) -> Result<serde_json::Value, CoreError> {
+        self.graph()?
+            .graphql_async(query, operation, variables, headers)
+            .await
+    }
+
+    /// Creates a poll-based GraphQL subscription.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError::GraphQl`] when no schema is installed or the
+    /// operation is invalid.
+    #[cfg(feature = "graphql")]
+    pub fn graphql_subscribe(
+        self: &Arc<Self>,
+        query: &str,
+        variables: serde_json::Value,
+        headers: &HashMap<String, String>,
+        poll_interval: Duration,
+    ) -> Result<Subscription, CoreError> {
+        self.graph()?
+            .graphql_subscribe(query, variables, headers, poll_interval)
+    }
+
+    /// Polls a subscription by id, waiting up to `wait`.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError`] when the id is unknown or execution fails.
+    #[cfg(feature = "graphql")]
+    pub fn graphql_next(
+        self: &Arc<Self>,
+        id: u64,
+        wait: Duration,
+    ) -> Result<SubscriptionEvent, CoreError> {
+        self.graph()?.graphql_next(id, wait)
+    }
+
+    /// Polls a subscription and returns `{changed,closed,response?}` JSON.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError`] when the id is unknown or execution fails.
+    #[cfg(feature = "graphql")]
+    pub fn graphql_next_json(
+        self: &Arc<Self>,
+        id: u64,
+        wait: Duration,
+    ) -> Result<String, CoreError> {
+        let event = self.graphql_next(id, wait)?;
+        let value = match event {
+            SubscriptionEvent::Changed(response) => serde_json::json!({
+                "changed": true, "closed": false, "response": response
+            }),
+            SubscriptionEvent::Unchanged => serde_json::json!({
+                "changed": false, "closed": false
+            }),
+            SubscriptionEvent::Closed => serde_json::json!({
+                "changed": false, "closed": true
+            }),
+        };
+        serde_json::to_string(&value).map_err(|err| CoreError::GraphQl(err.to_string()))
+    }
+
+    /// Cancels a subscription by id; returns whether it existed.
+    #[cfg(feature = "graphql")]
+    pub fn graphql_unsubscribe(self: &Arc<Self>, id: u64) -> bool {
+        self.graph
+            .as_ref()
+            .is_some_and(|graph| graph.graphql_unsubscribe(id))
+    }
+
     /// Executes a JSON request and returns a JSON response.
     ///
-    /// M1 ops: `ping`, `put`, `get`, `delete`, `scan`, `batch`, `flush`.
-    /// DQL/GraphQL ops land in M3/M4.
+    /// Ops: `ping`, `put`, `get`, `delete`, `scan`, `batch`, `flush`, plus
+    /// DQL/GraphQL ops when the corresponding features are enabled.
     ///
     /// # Errors
     ///
     /// Returns [`CoreError`] on malformed requests or storage failure.
-    pub fn execute(&self, request: &str) -> Result<String, CoreError> {
+    #[allow(clippy::too_many_lines, reason = "one match arm per envelope op")]
+    pub fn execute(self: &Arc<Self>, request: &str) -> Result<String, CoreError> {
         self.executed.fetch_add(1, Ordering::Relaxed);
         let req: WireRequest =
             serde_json::from_str(request).map_err(|err| CoreError::BadRequest(err.to_string()))?;
@@ -290,6 +512,79 @@ impl Instance {
                 self.flush()?;
                 serde_json::json!({ "ok": true })
             }
+            #[cfg(feature = "query")]
+            WireRequest::DqlQuery { query } => {
+                let data = self.dql_query(&query)?;
+                serde_json::json!({ "ok": true, "data": data })
+            }
+            #[cfg(feature = "query")]
+            WireRequest::DqlMutate { query } => {
+                let uids = self.dql_mutate_json(&query)?;
+                let uids: serde_json::Value =
+                    serde_json::from_str(&uids).map_err(|err| CoreError::Query(err.to_string()))?;
+                serde_json::json!({ "ok": true, "uids": uids })
+            }
+            #[cfg(feature = "query")]
+            WireRequest::DqlAlter { schema } => {
+                self.dql_alter(&schema)?;
+                serde_json::json!({ "ok": true })
+            }
+            #[cfg(feature = "graphql")]
+            WireRequest::SetGraphqlSchema { sdl } => {
+                self.set_graphql_schema(&sdl)?;
+                serde_json::json!({ "ok": true })
+            }
+            #[cfg(feature = "graphql")]
+            WireRequest::GraphqlSchema => {
+                serde_json::json!({ "ok": true, "sdl": self.graphql_schema() })
+            }
+            #[cfg(feature = "graphql")]
+            WireRequest::Graphql {
+                query,
+                operation,
+                variables,
+                headers,
+            } => {
+                let variables = variables.unwrap_or_else(|| serde_json::json!({}));
+                let headers = headers.unwrap_or_default();
+                let response = self.graphql(&query, operation.as_deref(), variables, &headers)?;
+                serde_json::json!({ "ok": true, "response": response })
+            }
+            #[cfg(feature = "graphql")]
+            WireRequest::GraphqlSubscribe {
+                query,
+                variables,
+                headers,
+                poll_ms,
+            } => {
+                let variables = variables.unwrap_or_else(|| serde_json::json!({}));
+                let headers = headers.unwrap_or_default();
+                let interval = Duration::from_millis(poll_ms.unwrap_or(DEFAULT_GRAPHQL_POLL_MS));
+                let subscription = self.graphql_subscribe(&query, variables, &headers, interval)?;
+                let initial = subscription.initial();
+                let id = subscription.into_id();
+                serde_json::json!({ "ok": true, "id": id, "response": initial })
+            }
+            #[cfg(feature = "graphql")]
+            WireRequest::GraphqlNext { id, wait_ms } => {
+                let wait = Duration::from_millis(wait_ms.unwrap_or(0)).min(MAX_GRAPHQL_WAIT);
+                match self.graphql_next(id, wait)? {
+                    SubscriptionEvent::Changed(response) => serde_json::json!({
+                        "ok": true, "changed": true, "closed": false, "response": response
+                    }),
+                    SubscriptionEvent::Unchanged => serde_json::json!({
+                        "ok": true, "changed": false, "closed": false
+                    }),
+                    SubscriptionEvent::Closed => serde_json::json!({
+                        "ok": true, "changed": false, "closed": true
+                    }),
+                }
+            }
+            #[cfg(feature = "graphql")]
+            WireRequest::GraphqlUnsubscribe { id } => {
+                let removed = self.graphql_unsubscribe(id);
+                serde_json::json!({ "ok": true, "removed": removed })
+            }
         };
         serde_json::to_string(&response).map_err(|err| CoreError::BadRequest(err.to_string()))
     }
@@ -317,9 +612,9 @@ struct PutEntry {
     value: String,
 }
 
-/// M1 request envelope (DQL/GraphQL envelopes land in M3/M4).
+/// JSON request envelope.
 #[derive(Debug, Deserialize)]
-#[serde(tag = "op", rename_all = "lowercase", deny_unknown_fields)]
+#[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
 enum WireRequest {
     /// Liveness probe.
     Ping,
@@ -360,6 +655,78 @@ enum WireRequest {
     },
     /// Durability fence.
     Flush,
+    /// DQL query.
+    #[cfg(feature = "query")]
+    DqlQuery {
+        /// DQL query text.
+        query: String,
+    },
+    /// DQL set/delete mutation.
+    #[cfg(feature = "query")]
+    DqlMutate {
+        /// DQL mutation text.
+        query: String,
+    },
+    /// Additive/updating DQL schema text.
+    #[cfg(feature = "query")]
+    DqlAlter {
+        /// Schema text.
+        schema: String,
+    },
+    /// Install/replace the embedded GraphQL schema.
+    #[cfg(feature = "graphql")]
+    SetGraphqlSchema {
+        /// Original user SDL.
+        sdl: String,
+    },
+    /// Read the installed GraphQL SDL.
+    #[cfg(feature = "graphql")]
+    GraphqlSchema,
+    /// Execute a GraphQL query or mutation.
+    #[cfg(feature = "graphql")]
+    Graphql {
+        /// GraphQL document.
+        query: String,
+        /// Optional operation name.
+        #[serde(default)]
+        operation: Option<String>,
+        /// Optional variables object.
+        #[serde(default)]
+        variables: Option<serde_json::Value>,
+        /// Optional auth headers.
+        #[serde(default)]
+        headers: Option<HashMap<String, String>>,
+    },
+    /// Create a poll-based GraphQL subscription.
+    #[cfg(feature = "graphql")]
+    GraphqlSubscribe {
+        /// GraphQL subscription document.
+        query: String,
+        /// Optional variables object.
+        #[serde(default)]
+        variables: Option<serde_json::Value>,
+        /// Optional auth headers.
+        #[serde(default)]
+        headers: Option<HashMap<String, String>>,
+        /// Poll interval in milliseconds.
+        #[serde(default)]
+        poll_ms: Option<u64>,
+    },
+    /// Poll a GraphQL subscription.
+    #[cfg(feature = "graphql")]
+    GraphqlNext {
+        /// Subscription id.
+        id: u64,
+        /// Maximum wait in milliseconds.
+        #[serde(default)]
+        wait_ms: Option<u64>,
+    },
+    /// Cancel a GraphQL subscription.
+    #[cfg(feature = "graphql")]
+    GraphqlUnsubscribe {
+        /// Subscription id.
+        id: u64,
+    },
 }
 
 #[cfg(test)]

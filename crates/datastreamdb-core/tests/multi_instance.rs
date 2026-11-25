@@ -31,6 +31,7 @@ fn two_memory_instances_are_isolated() {
     );
 }
 
+#[cfg(feature = "fjall")]
 #[test]
 fn config_matrix() {
     // Bare config: memory backend, default tenant.
@@ -80,6 +81,7 @@ fn errors_are_isolated_per_instance() {
     assert_eq!(b.executed(), 0);
 }
 
+#[cfg(feature = "fjall")]
 #[test]
 fn dir_backed_instance_persists_across_reopen() {
     let dir = temp_dir("conformance");
@@ -102,6 +104,7 @@ fn dir_backed_instance_persists_across_reopen() {
     std::fs::remove_dir_all(&dir).expect("cleanup");
 }
 
+#[cfg(feature = "fjall")]
 #[test]
 fn drop_closes_and_flushes_without_explicit_flush() {
     let dir = temp_dir("drop-close");
@@ -127,6 +130,7 @@ fn drop_closes_and_flushes_without_explicit_flush() {
     std::fs::remove_dir_all(&dir).expect("cleanup");
 }
 
+#[cfg(feature = "fjall")]
 #[test]
 fn locked_directory_rejects_second_instance() {
     let dir = temp_dir("locked-dir");

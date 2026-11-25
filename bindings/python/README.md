@@ -15,7 +15,7 @@ Full developer guide: <https://fab679.github.io/datastreamdb/embedding/python/>
 import json
 from datastreamdb import Instance, version
 
-print(version())  # "0.1.0"
+print(version())  # "0.2.0"
 
 db = Instance("{}")  # isolated in-memory instance
 db.put("user:1", json.dumps({"name": "Ada", "age": 36}))
@@ -50,7 +50,7 @@ for pair in result["pairs"]:
 ```
 
 Keys are returned in lexicographic order. `limit` defaults to 1000 and is
-clamped to 100,000. There is no continuation cursor in 0.1.0.
+clamped to 100,000. There is no continuation cursor in 0.2.0.
 
 ## Atomic writes
 
@@ -79,10 +79,24 @@ print(result["applied"])  # 3
 | `execute(request)` | `ping`, `put`, `get`, `delete`, `scan`, `batch`, `flush`. |
 | `version()` | Binding/engine version. |
 
-Values are strings in this binding. Serialize JSON documents with
-`json.dumps`; base64-encode binary data. Embedded mode is key/value only in
-0.1.0 — DQL and GraphQL run against the standalone servers. The GIL is
-released around every engine call.
+Values are strings in the raw KV API. Serialize JSON documents with
+`json.dumps`; base64-encode binary data. The GIL is released around every
+engine call.
+
+## DQL and GraphQL
+
+```python
+db.dql_alter("name: string @index(exact) .\nfriend: [uid] @reverse .\ntype Person {\n name\n friend\n}")
+db.dql_mutate('{ set { _:a <name> "Ada" .\n_:b <name> "Bob" .\n_:a <friend> _:b .\n} }')
+print(db.dql_query('{ people(func: eq(name, "Ada")) { name friend { name } } }'))
+
+db.set_graphql_schema("type Person { id: ID! name: String @search(by: [term]) }")
+print(db.graphql("{ queryPerson { name } }"))
+```
+
+GraphQL subscriptions are poll-based via `graphql_subscribe`, `graphql_next`,
+and `graphql_unsubscribe`. Embedded graph mode is single-node; see the full
+guide at <https://fab679.github.io/datastreamdb/embedding/queries/>.
 
 ## Build and test
 

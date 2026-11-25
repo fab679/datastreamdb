@@ -8,8 +8,20 @@ description = "Embeddable multi-instance engine facade: open, query, mutate, clo
 documentation = "https://docs.rs/datastreamdb-core"
 
 [features]
-default = ["fjall"]
+default = ["fjall", "query", "graphql"]
 fjall = ["datastreamdb-store/fjall"]
+query = [
+    "dep:datastreamdb-posting",
+    "dep:datastreamdb-query",
+    "dep:datastreamdb-schema",
+    "dep:datastreamdb-x",
+]
+graphql = [
+    "query",
+    "dep:datastreamdb-graphql",
+    "dep:futures",
+    "dep:tokio",
+]
 
 [dependencies]
 datastreamdb-store.workspace = true
@@ -20,6 +32,16 @@ serde_json.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 uuid.workspace = true
+datastreamdb-posting = { workspace = true, optional = true }
+datastreamdb-query = { workspace = true, optional = true }
+datastreamdb-schema = { workspace = true, optional = true }
+datastreamdb-x = { workspace = true, optional = true }
+datastreamdb-graphql = { workspace = true, optional = true }
+futures = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true }
+
+[dev-dependencies]
+tempfile.workspace = true
 
 [lints]
 workspace = true

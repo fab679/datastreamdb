@@ -7,27 +7,32 @@ release. Flush explicitly first when durability matters.
 
 | Language | Handle | Install |
 |---|---|---|
-| Rust | `Arc<datastreamdb_core::Instance>` | `datastreamdb-core = "0.1"` |
+| Rust | `Arc<datastreamdb_core::Instance>` | `datastreamdb-core = "0.2"` |
 | TypeScript | `Instance` class | `npm install @datastreamdb/core` |
 | Python | `datastreamdb.Instance` | `pip install datastreamdb` |
 | C | `datastreamdb_handle_t*` | release asset: `libdatastreamdb_ffi.a` + `datastreamdb.h` |
 
-## What 0.1.0 supports
+## What 0.2.0 supports
 
-| Capability | Embedded 0.1.0 | Standalone servers |
+| Capability | Embedded 0.2.0 | Standalone servers |
 |---|---|---|
 | Open multiple isolated instances in one process | Yes | N/A |
 | Raw key/value `put`, `get`, `delete` | Yes | Yes |
 | Prefix `scan` | Yes | Yes |
 | Atomic multi-key `batch` | Yes | Yes |
 | Explicit `flush` / durability fence | Yes | Yes |
-| DQL `query` / `mutate` / `alter` | **No — planned** | Yes |
-| GraphQL data layer | **No — planned** | Yes |
+| DQL relationship/pattern queries | Yes | Yes |
+| DQL set/delete mutations | Yes | Yes |
+| Additive schema alters | Yes | Yes |
+| GraphQL queries and mutations | Yes | Yes |
+| GraphQL subscriptions | Poll-based | Poll/WebSocket |
+| Multi-node Raft, ACL, namespaces | No | Yes |
 
-!!! warning "Embedded mode is key/value in 0.1.0"
-    The embedded envelope supports `ping`, `put`, `get`, `delete`, `scan`,
-    `batch`, and `flush`. It does **not** parse DQL or GraphQL yet. Use the
-    standalone servers for graph queries, schema changes, and GraphQL.
+!!! note "Graph mode is single-node"
+    Embedded DQL/GraphQL runs locally with the same executor as the standalone
+    server. Use the standalone servers for clustering, ACL, namespaces, and
+    WebSocket subscriptions. See [DQL & GraphQL](queries.md) for relationship,
+    pattern, schema, mutation, and subscription examples.
 
 ## Configuration
 
@@ -129,7 +134,7 @@ A missing key returns `"value": null` (Python `None`, Rust `None`).
 - `prefix` defaults to `""` (scan from the beginning).
 - `limit` defaults to **1000** and is clamped to **100,000**.
 - Results are in key order.
-- There is **no cursor** in 0.1.0. To page, use a narrower prefix or raise
+- There is **no cursor** in 0.2.0. To page, use a narrower prefix or raise
   `limit`; the engine does not return a continuation token.
 
 ### Query limits
@@ -183,7 +188,7 @@ operations:
 
 ## Error handling
 
-Errors are language-native in 0.1.0 — there is no JSON error envelope.
+Errors are language-native in 0.2.0 — there is no JSON error envelope.
 
 | Binding | Failure surface |
 |---|---|

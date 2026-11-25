@@ -59,6 +59,21 @@ int main(void) {
   free(ga);
   free(gb);
 
+  char *alter = exec_copy(a,
+      "{\"op\":\"dql_alter\",\"schema\":\"name: string @index(exact) .\"}");
+  CHECK(alter != NULL, "dql alter");
+  free(alter);
+
+  char *mut = exec_copy(a,
+      "{\"op\":\"dql_mutate\",\"query\":\"{ set { _:p <name> \\\"Ada\\\" . } }\"}");
+  CHECK(mut != NULL, "dql mutate");
+  free(mut);
+
+  char *query = exec_copy(a,
+      "{\"op\":\"dql_query\",\"query\":\"{ q(func: has(name)) { name } }\"}");
+  CHECK(query != NULL && strstr(query, "Ada") != NULL, "dql query");
+  free(query);
+
   char *bad = exec_copy(a, "{\"op\":\"nope\"}");
   CHECK(bad == NULL, "bad op fails");
   printf("expected error: %s\n", datastreamdb_last_error());

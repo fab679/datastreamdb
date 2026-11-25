@@ -1,6 +1,22 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.2.0
+
+Embedded graph mode:
+
+- DQL relationship traversal and nested pattern/filter queries.
+- DQL set/delete mutations with local UID allocation.
+- Additive/updating schema alters with index rebuilds.
+- GraphQL queries and mutations from user SDL.
+- Poll-based GraphQL subscriptions with sync and async helpers.
+- Schema history, GraphQL SDL, and timestamp recovery persisted for fjall
+  directories.
+- Rust, TypeScript, Python, and C-envelope APIs; expanded embedding docs.
+
+Embedded graph mode is single-node. Clustering, ACL, namespaces, WebSocket
+subscriptions, drop operations, and vector indexes remain server/future work.
+
+## 0.1.0
 
 First packaged release: DataStreamDB ported to Rust.
 

@@ -88,6 +88,22 @@ int main(void) {
 }
 ```
 
+## DQL and GraphQL
+
+Use the same envelope for graph operations:
+
+```json
+{"op":"dql_alter","schema":"name: string @index(exact) . friend: [uid] @reverse ."}
+{"op":"dql_mutate","query":"{ set { _:a <name> \"Ada\" . _:b <name> \"Bob\" . _:a <friend> _:b . } }"}
+{"op":"dql_query","query":"{ people(func: eq(name, \"Ada\")) { name friend { name } } }"}
+{"op":"set_graphql_schema","sdl":"type Person { id: ID! name: String @search(by: [term]) friend: [Person] @hasInverse(field: friend) }"}
+{"op":"graphql","query":"{ queryPerson { name friend { name } } }"}
+```
+
+GraphQL subscriptions use `graphql_subscribe`, `graphql_next`, and
+`graphql_unsubscribe` with the returned id. See
+[DQL & GraphQL](queries.md) for the full request/response shapes.
+
 ## Request and response shapes
 
 | `op` | Request | Success response |
@@ -134,11 +150,13 @@ if (datastreamdb_execute(db, (const uint8_t *)req, strlen(req),
 - Handles are `Send + Sync`; calls may run on any thread.
 - `datastreamdb_last_error` is per-thread.
 
-## Limitations in 0.1.0
+## Limitations in 0.2.0
 
-- Embedded mode is key/value only. DQL and GraphQL run against the standalone
-  servers.
+- Embedded graph mode is single-node; clustering, ACL, and namespaces require
+  the standalone servers.
 - Envelope values are strings; base64-encode binary data.
+- Raw KV and graph data use separate partitions.
+- GraphQL subscriptions are poll-based; WebSocket push is not exposed.
 - Scans are bounded and have no continuation cursor.
 
 A complete reference consumer lives at `bindings/c/smoke.c` in the repo.

@@ -54,6 +54,7 @@ nav:
       - embedding/typescript.md
       - embedding/python.md
       - embedding/c.md
+      - DQL & GraphQL: embedding/queries.md
   - DQL guide: dql.md
   - GraphQL: graphql.md
   - HTTP API: http-api.md

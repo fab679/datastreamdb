@@ -47,6 +47,26 @@ export declare class Instance {
    * Returns a JS error on engine failure.
    */
   get(key: string): string | null
+  /** Executes a DQL query and returns JSON. */
+  dqlQuery(query: string): string
+  /** Applies a DQL mutation and returns assigned UIDs as JSON. */
+  dqlMutate(mutation: string): string
+  /** Applies additive/updating DQL schema text. */
+  dqlAlter(schema: string): void
+  /** Installs/replaces the embedded GraphQL schema from original SDL. */
+  setGraphqlSchema(sdl: string): void
+  /** Returns the installed GraphQL SDL, if any. */
+  graphqlSchema(): string | null
+  /** Executes a GraphQL query/mutation and returns JSON. */
+  graphql(query: string, variablesJson?: string | undefined | null, operation?: string | undefined | null, headersJson?: string | undefined | null): string
+  /** Async GraphQL query/mutation execution. */
+  graphqlAsync(query: string, variablesJson?: string | undefined | null, operation?: string | undefined | null, headersJson?: string | undefined | null): Promise<string>
+  /** Creates a poll-based GraphQL subscription; returns its id. */
+  graphqlSubscribe(query: string, variablesJson?: string | undefined | null, headersJson?: string | undefined | null, pollMs?: number | undefined | null): number
+  /** Polls a subscription and returns `{changed,closed,response?}` JSON. */
+  graphqlNext(id: number, waitMs?: number | undefined | null): string
+  /** Cancels a subscription. */
+  graphqlUnsubscribe(id: number): boolean
 }
 
 /** Binding version (tracks the workspace version). */
