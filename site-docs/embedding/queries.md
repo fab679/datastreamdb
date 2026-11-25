@@ -5,9 +5,22 @@ servers, but with single-node semantics: no Raft, zero, worker, ACL, or
 namespaces. Instances are isolated by handle; graph data uses the posting
 partition, while raw `put`/`get` use the separate `default` partition.
 
-## Schema first
+## Schema: optional for scalars, required for relationships/indexes
 
-DQL needs predicates and types before mutations or index-based roots:
+Basic scalar predicates are auto-derived by mutations, Dgraph-style:
+
+```text
+{ set { _:a <name> "Ada" . } }
+```
+
+`name` becomes a scalar string predicate and `has(name)` works without any
+schema. But declare schema when you need:
+
+- **UID/relationship predicates** (`friend: [uid]`); otherwise the engine may
+  infer a scalar and reject the UID value.
+- **Reverse edges** (`@reverse`) for `~friend` traversal.
+- **Indexes** for `eq`, `term`, `hash`, `int`, and similar root functions.
+- **Type definitions** for `type(Person)` and GraphQL-generated schemas.
 
 ```text
 name: string @index(exact, term) .

@@ -67,7 +67,9 @@ documents, indexes, and DQL are handled by the standalone server layers.
 | Value — TypeScript / Python / C | UTF-8 string | The JSON envelope only accepts strings. |
 | JSON document | Serialize to a string/bytes | `JSON.stringify`, `json.dumps`, or `serde_json`. |
 | Binary data | Rust bytes, or base64 string | Node/Python/C should base64-encode binary values. |
-| Numbers, booleans, dates | Encode inside a JSON string | There are no native scalar value types in 0.1.0. |
+| Numbers, booleans, dates | Encode inside a JSON string | No native scalar value types in the KV envelope. |
+| Scalar DQL predicates | Auto-derived on first mutation | `{ set { _:a <name> "Ada" . } }` works without schema. |
+| UID relationships, reverse edges, indexes, types | Declared schema | Use `dql_alter`; see [DQL & GraphQL](queries.md). |
 
 ### Keys
 
