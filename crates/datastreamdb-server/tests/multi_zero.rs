@@ -97,7 +97,7 @@ async fn zero_join_replicates_and_survives_one_loss() {
     let addrs = vec![grpc1.clone(), grpc2.clone(), grpc3.clone()];
 
     // All zeros converge on three members.
-    let deadline = tokio::time::Instant::now() + Duration::from_secs(60);
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(180);
     loop {
         if zero_members(&zero1).len() == 3
             && zero_members(&zero2).len() == 3

@@ -118,4 +118,5 @@ versions. CI checks the exported symbol list (`tools/xtask spec`) against the
 checked-in allowlist.
 
 The published developer guide lives at `site-docs/embedding/index.md` and has
-language-specific examples for Rust, TypeScript, Python, and C.
+language-specific examples for Rust, TypeScript, Python, and C. Complete
+movies/TODO/orders walkthroughs are in `site-docs/embedding/tutorials.md`.

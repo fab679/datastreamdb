@@ -360,10 +360,17 @@ mod tests {
     #[test]
     fn rejects_tampered_wrong_key_and_wrong_alg() {
         let token = mint_access_default(&hmac_secrets(), "alice", &[], 1).expect("mint");
-        // Tampered signature.
-        let mut bad = token.clone();
-        bad.pop();
-        bad.push(if bad.ends_with('A') { 'B' } else { 'A' });
+        // Tampered signature. Change the first signature character, not the
+        // last: the final base64 character can carry unused padding bits.
+        let parts: Vec<&str> = token.split('.').collect();
+        let mut signature: Vec<char> = parts[2].chars().collect();
+        signature[0] = if signature[0] == 'A' { 'B' } else { 'A' };
+        let bad = format!(
+            "{}.{}.{}",
+            parts[0],
+            parts[1],
+            signature.iter().collect::<String>()
+        );
         assert!(matches!(
             validate(&hmac_secrets(), &bad),
             Err(JwtError::Parse(_))

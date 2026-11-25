@@ -96,5 +96,5 @@ on Linux).
 - [x] `cargo publish` loop green (28 crates, in order above)
 - [x] `npm publish` green (`@datastreamdb/core@0.2.0`)
 - [x] `maturin publish` green (`datastreamdb==0.2.0`)
-- [ ] GitHub release `v0.2.0` with the C assets attached
-- [ ] Tag: `git tag v0.2.0 && git push origin v0.2.0`
+- [x] GitHub release `v0.2.0` with the C assets attached
+- [x] Tag: `git tag v0.2.0 && git push origin v0.2.0`

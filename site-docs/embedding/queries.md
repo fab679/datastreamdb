@@ -5,6 +5,9 @@ servers, but with single-node semantics: no Raft, zero, worker, ACL, or
 namespaces. Instances are isolated by handle; graph data uses the posting
 partition, while raw `put`/`get` use the separate `default` partition.
 
+For complete movies, TODO, and orders walkthroughs, see
+[Embedded tutorials](tutorials.md).
+
 ## Schema: optional for scalars, required for relationships/indexes
 
 Basic scalar predicates are auto-derived by mutations, Dgraph-style:
@@ -213,12 +216,57 @@ let changed = sub.next_timeout(Duration::from_secs(2))?;
 sub.close();
 ```
 
-## Supported data
+## Supported types
+
+### DQL predicate types
+
+| Type | Meaning | Index tokenizers |
+|---|---|---|
+| `string` | UTF-8 text | `exact`, `term`, `fulltext`, `trigram`, `hash` |
+| `int` | 64-bit signed integer | `int` |
+| `float` | 64-bit floating point | `float` |
+| `bool` | Boolean | `bool` |
+| `datetime` | RFC3339 date/time; use this for calendar dates | `year`, `month`, `day`, `hour` |
+| `geo` | GeoJSON geometry: Point, LineString, Polygon, MultiPolygon | `geo` |
+| `uid` | Relationship to another node | Not indexable; supports `@reverse` |
+| `password` | Hashed password | Not indexable |
+| `bigfloat` | Arbitrary-precision decimal | No dedicated index tokenizer |
+| `binary` | Raw bytes | Schema-supported; not exposed in GraphQL |
+| `float32vector` | Float vector | Vector indexes are not supported in embedded 0.2.0 |
+| `default` | Untyped/auto-derived scalar | Depends on the derived type |
+
+There is **no separate `date` type**: use `datetime` with an RFC3339 value such
+as `"2026-11-25T00:00:00Z"`.
+
+### Spatial types
+
+DQL uses `geo` and stores GeoJSON geometries. GraphQL exposes them as:
+
+| GraphQL type | Geometry |
+|---|---|
+| `Point` | Point |
+| `PointList` | Line string / point list |
+| `Polygon` | Polygon |
+| `MultiPolygon` | Multi-polygon |
+
+### GraphQL type mapping
+
+| GraphQL type | DQL type |
+|---|---|
+| `ID` | `uid` |
+| `String` | `string` |
+| `Int` / `Int64` | `int` |
+| `Float` | `float` |
+| `Boolean` | `bool` |
+| `DateTime` | `datetime` |
+| `Point`, `PointList`, `Polygon`, `MultiPolygon` | `geo` |
+| `[T]` | list predicate |
+| Object type | `uid` relationship, usually with `@hasInverse` |
+
+### Other data
 
 | Item | Embedded graph support |
 |---|---|
-| Predicates | `string`, `int`, `float`, `bool`, `datetime`, `geo`, `uid`, `password`, `bigfloat` |
-| Predicate indexes | `exact`, `term`, `hash`, `int`, `float`, `bool`, `datetime`, `geo` (per DQL schema) |
 | Relationships | `uid` predicates, lists, `@reverse`, `@hasInverse` in GraphQL SDL |
 | DQL values | RDF literals in mutations; JSON output from queries |
 | GraphQL values | GraphQL scalar/object/list types from the user SDL |
