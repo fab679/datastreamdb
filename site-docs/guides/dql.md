@@ -76,10 +76,30 @@ Root functions include `uid(...)`, `has(pred)`, `eq/le/ge/gt/lt`,
 (`first:`/`offset:`), ordering (`orderasc:`/`orderdesc:`), and
 `@cascade` follow upstream semantics.
 
-Recursive traversal uses `@recurse(depth: N, loop: false)` with every predicate
-in one block. `depth` includes the root; `loop: true` allows cycles and requires
-a positive depth. See
-[recursive queries](../embedding/queries.md#recursive-queries) for the edge
+## Directives
+
+All six DQL directives are implemented in both standalone and embedded mode:
+
+| Directive | Support | Notes |
+|---|---|---|
+| `@filter` | Yes | Functions and boolean operators; nested filters. |
+| `@normalize` | Yes | Flattens the response to aliased predicates. |
+| `@cascade` | Yes | Bare or `@cascade(pred, ...)`; checks nested paths. |
+| `@recurse` | Yes | `depth` and `loop`; one level of predicates. |
+| `@ignorereflex` | Yes | Block-level; removes a node that is its own ancestor. |
+| `@groupby` | Yes | `count`, `min`, `max`, `sum`, `avg`; aliases. |
+
+```text
+{ q(func: has(name)) @cascade { name age } }
+{ q(func: eq(name, "A")) @ignorereflex { name friend { name } } }
+{ q(func: has(age)) @groupby(age) { count(uid) } }
+```
+
+`@ignorereflex` applies to the query block. Putting it on a predicate
+(`friend @ignorereflex`) is rejected. Recursive traversal uses
+`@recurse(depth: N, loop: false)` with every predicate in one block; `depth`
+includes the root, and `loop: true` allows cycles and requires a positive depth.
+See [recursive queries](../embedding/queries.md#recursive-queries) for the edge
 budget and variable rules.
 
 Variables cross blocks with `var()`:

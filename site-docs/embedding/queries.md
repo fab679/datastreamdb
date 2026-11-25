@@ -175,6 +175,11 @@ The `friend` predicate must be declared as `[uid]` (and `@reverse` if you need
 This is a pattern query: the root selects candidates, `@filter` constrains the
 root, and the nested `friend` block applies a second filter to related nodes.
 
+`@normalize`, `@cascade`, `@ignorereflex`, and `@groupby` are also available.
+`@ignorereflex` is a block-level directive: put it on the query block, not on a
+predicate. See the [DQL directives](../guides/dql.md#directives) table for the
+full list.
+
 Other useful roots and filters:
 
 ```text
