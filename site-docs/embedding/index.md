@@ -7,11 +7,11 @@ title: Embedding overview
 Every embedding goes through an opaque instance handle. Handles are
 `Send + Sync`; calls may run on any thread. Dropping the last handle
 closes that instance only: backend flush, partition close, file-lock
-release. Flush explicitly first when durability matters.
+release. Graph mutations commit before the call returns.
 
 | Language | Handle | Install |
 |---|---|---|
-| Rust | `Arc<datastreamdb_core::Instance>` | `datastreamdb-core = "0.2"` |
+| Rust | `Arc<Instance>` | `cargo add datastreamdb-core` |
 | TypeScript | `Instance` class | `npm install @datastreamdb/core` |
 | Python | `datastreamdb.Instance` | `pip install datastreamdb` |
 | C | `datastreamdb_handle_t*` | release asset: `libdatastreamdb_ffi.a` + `datastreamdb.h` |
@@ -21,10 +21,6 @@ release. Flush explicitly first when durability matters.
 | Capability | Embedded 0.2.0 | Standalone servers |
 |---|---|---|
 | Open multiple isolated instances in one process | Yes | N/A |
-| Raw key/value `put`, `get`, `delete` | Yes | Yes |
-| Prefix `scan` | Yes | Yes |
-| Atomic multi-key `batch` | Yes | Yes |
-| Explicit `flush` / durability fence | Yes | Yes |
 | DQL relationship/pattern queries | Yes | Yes |
 | DQL set/delete mutations | Yes | Yes |
 | Additive schema alters | Yes | Yes |
@@ -59,141 +55,67 @@ fast on version skew.
 - Use separate instances (and separate directories) for separate tenants or
   applications.
 
-## Data model and supported types
+## What you get
 
-The embedded engine exposes two independent surfaces: a partition-scoped
-ordered key/value store, and a graph engine running the same DQL executor and
-GraphQL layer as the standalone servers. The key/value table below covers the
-first; the graph surface is described in [DQL and GraphQL](queries.md) and the
-shared data model in [Concepts](../concepts/index.md).
+Embedded 0.2.0 runs the same graph engine as the standalone servers:
 
-| Item | Supported form | Notes |
-|---|---|---|
-| Key | UTF-8 string | Typed APIs take `&str`; keys sort lexicographically. |
-| Value — Rust | Arbitrary bytes (`&[u8]`) | Binary-safe. `get` returns `Vec<u8>`. |
-| Value — TypeScript / Python / C | UTF-8 string | The JSON envelope only accepts strings. |
-| JSON document | Serialize to a string/bytes | `JSON.stringify`, `json.dumps`, or `serde_json`. |
-| Binary data | Rust bytes, or base64 string | Node/Python/C should base64-encode binary values. |
-| Numbers, booleans, dates | Encode inside a JSON string | No native scalar value types in the KV envelope. |
-| Scalar DQL predicates | Auto-derived on first mutation | `{ set { _:a <name> "Ada" . } }` works without schema. |
-| UID relationships, reverse edges, indexes, types | Declared schema | Use `dql_alter`; see [DQL & GraphQL](queries.md). |
+| Capability | Embedded API |
+|---|---|
+| Schema alters, including index rebuilds | `dql_alter` / `dqlAlter` / `dql_alter` |
+| DQL set/delete mutations | `dql_mutate` / `dqlMutate` / `dql_mutate` |
+| DQL relationship and pattern queries | `dql_query` / `dqlQuery` / `dql_query` |
+| GraphQL schema, queries, mutations | `set_graphql_schema`, `graphql` |
+| Poll-based GraphQL subscriptions | `graphql_subscribe` / `graphql_next` |
 
-### Keys
+There is no separate server, port, or network hop. The instance owns the graph
+engine and the storage.
 
-Keys are UTF-8 strings. Use prefixes to model collections:
-
-```text
-user:0001
-user:0002
-post:0001
-session:2026-11-25:abc
-```
-
-`scan` returns keys in lexicographic order. Zero-pad numeric ids when order
-matters (`user:0009` sorts before `user:0010`).
-
-### Values
-
-Rust accepts arbitrary bytes:
+## Quick start
 
 ```rust
-db.put("blob:1", &[0x00, 0xff, 0x10])?;
-```
+use datastreamdb_core::{Instance, InstanceConfig};
 
-The TypeScript, Python, and C envelopes carry JSON strings. Store structured
-data as JSON text:
+let db = Instance::open(InstanceConfig::memory())?;
 
-```json
-{ "name": "Ada", "age": 36, "active": true }
-```
-
-Serialize before `put`, parse after `get`/`scan`. Do not store raw JSON objects
-as envelope values; the value field must be a string.
-
-## Querying data
-
-### Get one key
-
-```json
-{ "op": "get", "key": "user:1" }
-```
-
-```json
-{ "ok": true, "value": "{\"name\":\"Ada\"}" }
-```
-
-A missing key returns `"value": null` (Python `None`, Rust `None`).
-
-### Prefix scan
-
-```json
-{ "op": "scan", "prefix": "user:", "limit": 100 }
-```
-
-```json
-{
-  "ok": true,
-  "pairs": [
-    { "key": "user:1", "value": "{\"name\":\"Ada\"}" },
-    { "key": "user:2", "value": "{\"name\":\"Bob\"}" }
-  ]
+db.dql_alter(r#"
+name: string @index(exact) .
+friend: [uid] @reverse .
+type Person {
+    name
+    friend
 }
+"#)?;
+
+db.dql_mutate(r#"{
+    set {
+        _:ada <name> "Ada" .
+        _:bob <name> "Bob" .
+        _:ada <friend> _:bob .
+    }
+}"#)?;
+
+let result = db.dql_query(r#"
+    { people(func: eq(name, "Ada")) { name friend { name } } }
+"#)?;
+println!("{result}");
 ```
 
-- `prefix` defaults to `""` (scan from the beginning).
-- `limit` defaults to **1000** and is clamped to **100,000**.
-- Results are in key order.
-- There is **no cursor** in 0.2.0. To page, use a narrower prefix or raise
-  `limit`; the engine does not return a continuation token.
+The same calls in TypeScript, Python, and C are on the language pages below.
+For GraphQL, install an SDL with `set_graphql_schema` and send documents to
+`graphql`; see [DQL and GraphQL](queries.md).
 
-### Query limits
+## Data model
 
-Scans are bounded. For large collections:
+Data is stored as predicates and nodes, exactly as in standalone mode:
 
-1. Split keys into narrower prefixes (`user:2026:11:`, `user:2026:12:`).
-2. Keep the working set below the scan limit.
-3. Store an index key if you need a different access path, e.g.
-   `index:email:ada@example.com -> user:1`.
+- Scalar predicates auto-derive on first mutation.
+- UID relationships, reverse edges, indexes, and types need a schema alter.
+- `type(Name)` selects nodes by `datastreamdb.type`; GraphQL mutations set it
+  automatically.
+- Facets describe an edge, not a node.
 
-## Mutations
-
-### Put and delete
-
-```json
-{ "op": "put", "key": "user:1", "value": "{\"name\":\"Ada\"}" }
-{ "op": "delete", "key": "user:1" }
-```
-
-`put` is an upsert. `delete` is idempotent; deleting a missing key succeeds.
-
-### Atomic batch
-
-```json
-{
-  "op": "batch",
-  "puts": [
-    { "key": "user:1", "value": "{\"name\":\"Ada\"}" },
-    { "key": "user:2", "value": "{\"name\":\"Bob\"}" }
-  ],
-  "deletes": ["user:3"]
-}
-```
-
-The batch is applied atomically. The response reports the number of staged
-operations:
-
-```json
-{ "ok": true, "applied": 3 }
-```
-
-### Flush
-
-```json
-{ "op": "flush" }
-```
-
-`flush` makes prior writes durable. Dropping the last handle also flushes, but
-`Drop` can only log failures; call `flush` explicitly when the result matters.
+The shared model is explained in [Concepts](../concepts/index.md). The full
+type and tokenizer table is in [DQL and GraphQL](queries.md#supported-types).
 
 ## Error handling
 
@@ -227,7 +149,11 @@ failure, `4` caught panic.
 
 ## Language guides
 
-- [Rust](rust.md) — typed byte-oriented API, scans, batches, ranges.
-- [TypeScript](typescript.md) — `Instance`, JSON documents, envelope operations.
-- [Python](python.md) — `Instance`, JSON documents, envelope operations.
-- [C](c.md) — stable ABI, status codes, response buffer ownership.
+- [Rust](rust.md) — `Instance`, DQL and GraphQL, threading, errors.
+- [TypeScript](typescript.md) — `Instance`, DQL and GraphQL, envelope calls.
+- [Python](python.md) — `Instance`, DQL and GraphQL, GIL handling.
+- [C](c.md) — stable ABI, DQL and GraphQL envelopes, buffer ownership.
+
+The low-level key/value methods (`put`, `get`, `scan`, `batch`) remain available
+for hosts that need raw storage, but graph applications should use DQL and
+GraphQL. They are documented separately in [Low-level key/value](key-value.md).

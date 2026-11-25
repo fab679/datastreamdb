@@ -4,7 +4,9 @@ Model projects, tasks, tags, assignments, dates, and relationship facets.
 
 ## Before you start
 
-Pick the embedded binding you want to use:
+Pick a binding. Each tab shows the install, how to open an instance, and the
+three calls this tutorial uses. `SCHEMA`, `DATA`, and `QUERY` are the blocks in
+the sections below.
 
 === "Rust"
 
@@ -14,11 +16,39 @@ Pick the embedded binding you want to use:
     serde_json = "1"
     ```
 
+    ```rust
+    use datastreamdb_core::{Instance, InstanceConfig};
+
+    let db = Instance::open(InstanceConfig::memory())?;
+
+    db.dql_alter(SCHEMA)?;
+    db.dql_mutate(DATA)?;
+    let result = db.dql_query(QUERY)?;
+    println!("{result}");
+    ```
+
+    For a persistent instance, open with
+    `InstanceConfig::from_json(r#"{"data_dir": "./data"}"#)?`.
+
 === "TypeScript"
 
     ```sh
     npm install @datastreamdb/core
     ```
+
+    ```js
+    import { Instance } from '@datastreamdb/core'
+
+    const db = new Instance('{}')
+
+    db.dqlAlter(SCHEMA)
+    db.dqlMutate(DATA)
+    const result = JSON.parse(db.dqlQuery(QUERY))
+    console.log(result)
+    ```
+
+    For a persistent instance, pass
+    `JSON.stringify({ data_dir: './data' })` to `new Instance(...)`.
 
 === "Python"
 
@@ -26,26 +56,61 @@ Pick the embedded binding you want to use:
     pip install datastreamdb
     ```
 
+    ```python
+    import json
+    from datastreamdb import Instance
+
+    db = Instance("{}")
+
+    db.dql_alter(SCHEMA)
+    db.dql_mutate(DATA)
+    result = json.loads(db.dql_query(QUERY))
+    print(result)
+    ```
+
+    For a persistent instance, pass
+    `json.dumps({"data_dir": "./data"})` to `Instance(...)`.
+
 === "C"
 
-    Download the `libdatastreamdb_ffi.a` / `datastreamdb.h` assets from the
+    Download `libdatastreamdb_ffi.a` and `datastreamdb.h` from the
     [v0.2.0 release](https://github.com/fab679/datastreamdb/releases/tag/v0.2.0).
 
-The blocks below are DQL documents. In Rust, pass each one to the matching
-method:
+    ```c
+    #include <stdio.h>
+    #include <string.h>
+    #include "datastreamdb.h"
 
-```rust
-use datastreamdb_core::{Instance, InstanceConfig};
+    static int exec(datastreamdb_handle_t *db, const char *request) {
+      uint8_t *out = NULL;
+      size_t len = 0;
+      int rc = datastreamdb_execute(db, (const uint8_t *)request,
+                                    strlen(request), &out, &len);
+      if (rc == DATASTREAMDB_OK) {
+        fwrite(out, 1, len, stdout);
+        datastreamdb_free_bytes(out, len);
+      }
+      return rc;
+    }
 
-let db = Instance::open(InstanceConfig::memory())?;
-db.dql_alter(SCHEMA)?;
-db.dql_mutate(DATA)?;
-let result = db.dql_query(QUERY)?;
-```
+    int main(void) {
+      datastreamdb_handle_t *db = NULL;
+      datastreamdb_open("{}", &db);
 
-Here `SCHEMA`, `DATA`, and `QUERY` name the blocks below. TypeScript, Python,
-and C expose the same three operations under their own
-naming conventions.
+      exec(db, "{\"op\":\"dql_alter\",\"schema\":\"...\"}");
+      exec(db, "{\"op\":\"dql_mutate\",\"query\":\"...\"}");
+      exec(db, "{\"op\":\"dql_query\",\"query\":\"...\"}");
+
+      datastreamdb_close(db);
+      return 0;
+    }
+    ```
+
+    The `...` placeholders are the JSON-escaped blocks below. Use a JSON
+    library to build them rather than escaping by hand.
+
+The blocks below are the DQL documents referenced as `SCHEMA`, `DATA`, and
+`QUERY`.
 
 ## Schema
 

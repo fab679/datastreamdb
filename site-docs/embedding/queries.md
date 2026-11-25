@@ -2,8 +2,8 @@
 
 Embedded 0.2.0 runs the same DQL executor and GraphQL layer as the standalone
 servers, but with single-node semantics: no Raft, zero, worker, ACL, or
-namespaces. Instances are isolated by handle; graph data uses the posting
-partition, while raw `put`/`get` use the separate `default` partition.
+namespaces. Instances are isolated by handle, and graph data lives in the
+instance's posting partition.
 
 For complete movies, TODO, and orders walkthroughs, see
 [Embedded tutorials](../tutorials/index.md).

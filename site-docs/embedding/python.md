@@ -30,9 +30,14 @@ print(persistent.id(), persistent.backend()) # uuid, "fjall"
 - `data_dir` selects the persistent fjall backend and takes an exclusive lock.
 - `tenant` is a label, not an isolation boundary.
 
-## DQL and GraphQL
+## DQL
 
 ```python
+import json
+from datastreamdb import Instance
+
+db = Instance("{}")
+
 db.dql_alter("""
 name: string @index(exact) .
 friend: [uid] @reverse .
@@ -41,123 +46,78 @@ type Person {
   friend
 }
 """)
-db.dql_mutate('{ set { _:a <name> "Ada" . _:b <name> "Bob" . _:a <friend> _:b . } }')
-print(db.dql_query('{ people(func: eq(name, "Ada")) { name friend { name } } }'))
 
+db.dql_mutate("""
+{ set {
+    _:ada <name> "Ada" .
+    _:bob <name> "Bob" .
+    _:ada <friend> _:bob .
+} }
+""")
+
+result = json.loads(db.dql_query("""
+  { people(func: eq(name, "Ada")) { name friend { name } } }
+"""))
+print(result)
+```
+
+`dql_mutate` returns JSON text of blank-node assignments. `dql_query` returns
+JSON text; parse it with `json.loads`.
+
+## GraphQL
+
+```python
 db.set_graphql_schema("""
-type Person {
+type Post {
   id: ID!
-  name: String @search(by: [term])
+  title: String @search(by: [term])
+  author: Author @hasInverse(field: posts)
+}
+type Author {
+  id: ID!
+  name: String @id @search(by: [hash])
+  posts: [Post]
 }
 """)
-print(db.graphql("{ queryPerson { name } }"))
+
+response = json.loads(db.graphql("""
+  mutation {
+    addPost(input: [{title: "Hello", author: {name: "Ann"}}]) {
+      post { id title author { name } }
+      numUids
+    }
+  }
+"""))
+print(response)
 ```
 
-See [DQL & GraphQL](queries.md) for pattern filters, mutations, and
-poll-based subscriptions.
+GraphQL execution errors arrive in `response["errors"]`; invalid SDL or
+transport failures raise `RuntimeError`.
 
-## Supported types
-
-| API | Type | Notes |
-|---|---|---|
-| `put(key, value)` | `str` | UTF-8 key and value. |
-| `get(key)` | `str \| None` | `None` when missing. |
-| `execute(request)` | JSON string | Envelope values are strings only. |
-| `scan` result | list of `{key, value}` | Values are UTF-8 strings. |
-| JSON document | `json.dumps` / `json.loads` | No native object values. |
-| Binary | base64 string | The binding does not accept raw `bytes` values. |
-
-## Store and read a JSON document
+## Subscriptions
 
 ```python
-user = {"name": "Ada", "age": 36, "active": True}
+subscription_id = db.graphql_subscribe("""
+  subscription { queryPost { title } }
+""")
 
-db.put("user:1", json.dumps(user))
-
-raw = db.get("user:1")
-decoded = None if raw is None else json.loads(raw)
-print(decoded["name"], decoded["age"])  # Ada 36
+event = json.loads(db.graphql_next(subscription_id, 0))  # initial response
+db.graphql('mutation { addPost(input: [{title: "Hello again"}]) { numUids } }')
+event = json.loads(db.graphql_next(subscription_id, 1000))
+db.graphql_unsubscribe(subscription_id)
 ```
 
-Use a key prefix for collections: `user:1`, `user:2`, `post:1`.
-
-## Query with prefix scans
-
-```python
-response = json.loads(db.execute(json.dumps({
-    "op": "scan",
-    "prefix": "user:",
-    "limit": 100,
-})))
-
-for pair in response["pairs"]:
-    user = json.loads(pair["value"])
-    print(pair["key"], user["name"])
-```
-
-- Keys come back in lexicographic order.
-- `limit` defaults to 1000 and is clamped to 100,000.
-- There is no cursor; use a narrower prefix or a larger limit to page.
-- Zero-pad numeric ids when order matters (`user:0001`).
-
-## Atomic writes
-
-```python
-result = json.loads(db.execute(json.dumps({
-    "op": "batch",
-    "puts": [
-        {"key": "user:1", "value": json.dumps({"name": "Ada"})},
-        {"key": "user:2", "value": json.dumps({"name": "Bob"})},
-    ],
-    "deletes": ["user:3"],
-})))
-
-print(result["applied"])  # 3
-```
-
-The batch is atomic. `delete` is idempotent.
-
-## Delete and flush
-
-```python
-db.execute(json.dumps({"op": "delete", "key": "user:1"}))
-db.execute('{"op":"flush"}')
-```
-
-`flush` makes prior writes durable. Dropping the last reference also flushes,
-but call `flush` explicitly when the result matters.
-
-## Execute the envelope
-
-```python
-ping = json.loads(db.execute('{"op":"ping"}'))
-print(ping["ok"], ping["backend"])  # True "memory"
-
-value = json.loads(db.execute(json.dumps({
-    "op": "get",
-    "key": "user:1",
-})))
-print(value["value"])  # string or None
-```
-
-Success responses:
-
-| `op` | Response |
-|---|---|
-| `ping` | `{ ok, instance, tenant, backend }` |
-| `put`, `delete`, `flush` | `{ ok: true }` |
-| `get` | `{ ok: true, value: string \| null }` |
-| `scan` | `{ ok: true, pairs: [{ key, value }] }` |
-| `batch` | `{ ok: true, applied: number }` |
+`graphql_next(id, wait_ms)` blocks up to `wait_ms` and returns
+`{changed, closed, response?}`. Close subscriptions when done.
 
 ## Errors
 
-The binding raises `RuntimeError` for malformed requests, unknown ops, invalid
-configs, locked directories, and storage failures:
+The binding raises `RuntimeError` for malformed requests, invalid SDL, locked
+directories, and engine failures:
 
 ```python
 try:
-    db.execute('{"op":"nope"}')
+    db.dql_query('{ q(func: has(name)) { name } }')
 except RuntimeError as err:
     print("datastreamdb:", err)
 ```
@@ -172,7 +132,9 @@ must be atomic; the engine does not provide compare-and-swap.
 
 - Embedded graph mode is single-node; clustering, ACL, and namespaces require
   the standalone servers.
-- Raw KV values are strings; store binary data as base64.
-- Raw KV and graph data use separate partitions.
+- DQL alters are additive/updating; drop operations and upserts are not exposed.
 - GraphQL subscriptions are poll-based; WebSocket push is not exposed.
-- Scans are bounded and have no continuation cursor.
+
+See [DQL and GraphQL](queries.md) for pattern filters, facets, and subscription
+shapes. The separate [low-level key/value API](key-value.md) is available for
+hosts that need raw storage.

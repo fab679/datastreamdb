@@ -30,55 +30,12 @@ log).
   isolation boundary.
 - Unknown fields are rejected so hosts fail fast on version skew.
 
-## Data model and supported types
+## Data model
 
-The embedded engine is an ordered, partition-scoped key/value store.
-
-| Item | Supported form | Notes |
-|---|---|---|
-| Key | UTF-8 string | Typed APIs take `&str`; keys sort lexicographically. |
-| Value (Rust) | arbitrary bytes (`&[u8]`) | Binary-safe; `get` returns `Vec<u8>`. |
-| Value (TS/Python/C envelope) | UTF-8 string | JSON values must be strings. |
-| JSON document | serialize to string/bytes | `serde_json`, `JSON.stringify`, `json.dumps`. |
-| Binary (TS/Python/C) | base64 string | The envelope has no byte-array value. |
-| Numbers/bools/dates | inside a JSON string | No native scalar value types in the KV envelope. |
-
-Use key prefixes to model collections (`user:0001`, `post:0001`). Zero-pad
-numeric ids when lexicographic order matters.
-
-## Requests
-
-Envelope over the handle (`execute`):
-
-| `op` | Request | Success response |
-|---|---|---|
-| `ping` | `{"op":"ping"}` | `{ok, instance, tenant, backend}` |
-| `put` | `key`, `value` | `{ok:true}` |
-| `get` | `key` | `{ok:true, value:string-or-null}` |
-| `delete` | `key` | `{ok:true}` |
-| `scan` | `prefix`, `limit?` | `{ok:true, pairs:[{key,value}]}` |
-| `batch` | `puts[]`, `deletes[]` | `{ok:true, applied:n}` |
-| `flush` | `{"op":"flush"}` | `{ok:true}` |
-| `dql_query` | `query` | `{ok:true, data:<json>}` |
-| `dql_mutate` | `query` | `{ok:true, uids:{blank:uid}}` |
-| `dql_alter` | `schema` | `{ok:true}` |
-| `set_graphql_schema` | `sdl` | `{ok:true}` |
-| `graphql_schema` | — | `{ok:true, sdl:string-or-null}` |
-| `graphql` | `query`, `operation?`, `variables?`, `headers?` | `{ok:true, response:{data,errors}}` |
-| `graphql_subscribe` | `query`, `variables?`, `headers?`, `poll_ms?` | `{ok:true, id, response}` |
-| `graphql_next` | `id`, `wait_ms?` | `{ok:true, changed, closed, response?}` |
-| `graphql_unsubscribe` | `id` | `{ok:true, removed}` |
-
-```json
-{ "op": "batch", "puts": [{ "key": "n", "value": "Ada" }], "deletes": [] }
-```
-
-`scan` returns keys in order. `limit` defaults to 1000 and clamps to 100,000;
-there is no continuation cursor in 0.2.0. `batch` applies all puts/deletes
-atomically. `delete` is idempotent.
-
-Embedded DQL and GraphQL are single-node but use the same executor and GraphQL
-layer as the standalone servers:
+Embedded graph mode uses the same model as the standalone servers: predicates,
+types, UID relationships, reverse edges, and facets. DQL and GraphQL are the
+supported interface. Scalar predicates auto-derive on first mutation; UID
+relationships, indexes, and types require a schema alter.
 
 ```rust
 db.dql_alter(
@@ -92,6 +49,42 @@ GraphQL subscriptions are poll-based (`graphql_subscribe` / `graphql_next` /
 `graphql_unsubscribe`); WebSocket push remains server work. See
 `site-docs/embedding/queries.md` for relationship, pattern, GraphQL, and
 subscription examples.
+
+## Graph requests
+
+Envelope over the handle (`execute`):
+
+| `op` | Request | Success response |
+|---|---|---|
+| `dql_query` | `query` | `{ok:true, data:<json>}` |
+| `dql_mutate` | `query` | `{ok:true, uids:{blank:uid}}` |
+| `dql_alter` | `schema` | `{ok:true}` |
+| `set_graphql_schema` | `sdl` | `{ok:true}` |
+| `graphql_schema` | — | `{ok:true, sdl:string-or-null}` |
+| `graphql` | `query`, `operation?`, `variables?`, `headers?` | `{ok:true, response:{data,errors}}` |
+| `graphql_subscribe` | `query`, `variables?`, `headers?`, `poll_ms?` | `{ok:true, id, response}` |
+| `graphql_next` | `id`, `wait_ms?` | `{ok:true, changed, closed, response?}` |
+| `graphql_unsubscribe` | `id` | `{ok:true, removed}` |
+
+## Low-level key/value requests
+
+The raw storage methods remain available for hosts that need them, but they are
+not part of the graph model and should not be used for graph records.
+
+| `op` | Request | Success response |
+|---|---|---|
+| `ping` | `{"op":"ping"}` | `{ok, instance, tenant, backend}` |
+| `put` | `key`, `value` | `{ok:true}` |
+| `get` | `key` | `{ok:true, value:string-or-null}` |
+| `delete` | `key` | `{ok:true}` |
+| `scan` | `prefix`, `limit?` | `{ok:true, pairs:[{key,value}]}` |
+| `batch` | `puts[]`, `deletes[]` | `{ok:true, applied:n}` |
+| `flush` | `{"op":"flush"}` | `{ok:true}` |
+
+`scan` returns keys in order. `limit` defaults to 1000 and clamps to 100,000;
+there is no continuation cursor in 0.2.0. `batch` applies all puts/deletes
+atomically. `delete` is idempotent. See `site-docs/embedding/key-value.md` for
+the value and key rules.
 
 ## Errors
 

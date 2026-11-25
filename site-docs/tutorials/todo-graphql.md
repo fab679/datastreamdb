@@ -4,7 +4,9 @@ Build a project/task graph with GraphQL mutations, nested queries, and updates.
 
 ## Before you start
 
-Pick the embedded binding you want to use:
+Pick a binding. Each tab shows the install, how to open an instance, install
+the SDL, and run a GraphQL document. `SDL`, `MUTATION`, and `QUERY` are the
+blocks in the sections below.
 
 === "Rust"
 
@@ -14,11 +16,41 @@ Pick the embedded binding you want to use:
     serde_json = "1"
     ```
 
+    ```rust
+    use std::collections::HashMap;
+    use datastreamdb_core::{Instance, InstanceConfig};
+
+    let db = Instance::open(InstanceConfig::memory())?;
+    db.set_graphql_schema(SDL)?;
+
+    let headers = HashMap::new();
+    db.graphql(MUTATION, None, serde_json::json!({}), &headers)?;
+    let result = db.graphql(QUERY, None, serde_json::json!({}), &headers)?;
+    println!("{result}");
+    ```
+
+    For a persistent instance, open with
+    `InstanceConfig::from_json(r#"{"data_dir": "./data"}"#)?`.
+
 === "TypeScript"
 
     ```sh
     npm install @datastreamdb/core
     ```
+
+    ```js
+    import { Instance } from '@datastreamdb/core'
+
+    const db = new Instance('{}')
+    db.setGraphqlSchema(SDL)
+
+    db.graphql(MUTATION)
+    const result = JSON.parse(db.graphql(QUERY))
+    console.log(result)
+    ```
+
+    For a persistent instance, pass
+    `JSON.stringify({ data_dir: './data' })` to `new Instance(...)`.
 
 === "Python"
 
@@ -26,28 +58,60 @@ Pick the embedded binding you want to use:
     pip install datastreamdb
     ```
 
+    ```python
+    import json
+    from datastreamdb import Instance
+
+    db = Instance("{}")
+    db.set_graphql_schema(SDL)
+
+    db.graphql(MUTATION)
+    result = json.loads(db.graphql(QUERY))
+    print(result)
+    ```
+
+    For a persistent instance, pass
+    `json.dumps({"data_dir": "./data"})` to `Instance(...)`.
+
 === "C"
 
-    Download the `libdatastreamdb_ffi.a` / `datastreamdb.h` assets from the
+    Download `libdatastreamdb_ffi.a` and `datastreamdb.h` from the
     [v0.2.0 release](https://github.com/fab679/datastreamdb/releases/tag/v0.2.0).
 
-The blocks below are GraphQL documents. In Rust, install the SDL once, then
-send mutations and queries to `graphql`:
+    ```c
+    #include <stdio.h>
+    #include <string.h>
+    #include "datastreamdb.h"
 
-```rust
-use std::collections::HashMap;
-use datastreamdb_core::{Instance, InstanceConfig};
+    static int exec(datastreamdb_handle_t *db, const char *request) {
+      uint8_t *out = NULL;
+      size_t len = 0;
+      int rc = datastreamdb_execute(db, (const uint8_t *)request,
+                                    strlen(request), &out, &len);
+      if (rc == DATASTREAMDB_OK) {
+        fwrite(out, 1, len, stdout);
+        datastreamdb_free_bytes(out, len);
+      }
+      return rc;
+    }
 
-let db = Instance::open(InstanceConfig::memory())?;
-db.set_graphql_schema(SDL)?;
+    int main(void) {
+      datastreamdb_handle_t *db = NULL;
+      datastreamdb_open("{}", &db);
 
-let headers = HashMap::new();
-db.graphql(MUTATION, None, serde_json::json!({}), &headers)?;
-let result = db.graphql(QUERY, None, serde_json::json!({}), &headers)?;
-```
+      exec(db, "{\"op\":\"set_graphql_schema\",\"sdl\":\"...\"}");
+      exec(db, "{\"op\":\"graphql\",\"query\":\"...\"}");
 
-Here `SDL`, `MUTATION`, and `QUERY` name the blocks below. TypeScript and Python use `setGraphqlSchema` / `set_graphql_schema` and
-`graphql`; C uses the envelope ops.
+      datastreamdb_close(db);
+      return 0;
+    }
+    ```
+
+    The `...` placeholders are the JSON-escaped blocks below. GraphQL execution
+    errors arrive in `response.errors`, not as a failed envelope.
+
+The blocks below are the GraphQL documents referenced as `SDL`, `MUTATION`, and
+`QUERY`.
 
 ## Schema
 

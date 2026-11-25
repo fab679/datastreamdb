@@ -3,7 +3,7 @@
 ```toml
 [dependencies]
 datastreamdb-core = "0.2"
-serde_json = "1" # only if you store JSON documents
+serde_json = "1"
 ```
 
 `datastreamdb-core` returns `Arc<Instance>`. Clone the `Arc` to share one
@@ -35,24 +35,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - `tenant` is a label, not an isolation boundary. Use separate instances for
   separate data.
 
-## DQL and GraphQL
-
-Embedded 0.2.0 includes the DQL executor and GraphQL layer:
+## DQL
 
 ```rust
+let db = Instance::open(InstanceConfig::memory())?;
+
 db.dql_alter(r#"
-    name: string @index(exact) .
-    friend: [uid] @reverse .
-    type Person {
-        name
-        friend
-    }
+name: string @index(exact) .
+friend: [uid] @reverse .
+type Person {
+    name
+    friend
+}
 "#)?;
+
 db.dql_mutate(r#"{
     set {
-        _:a <name> "Ada" .
-        _:b <name> "Bob" .
-        _:a <friend> _:b .
+        _:ada <name> "Ada" .
+        _:bob <name> "Bob" .
+        _:ada <friend> _:bob .
     }
 }"#)?;
 
@@ -60,133 +61,80 @@ let people = db.dql_query(r#"
     { people(func: eq(name, "Ada")) { name friend { name } } }
 "#)?;
 println!("{people}");
+```
+
+`dql_mutate` returns a `HashMap<String, u64>` of blank-node assignments.
+`dql_query` returns `serde_json::Value`; `dql_query_json` returns the JSON text.
+
+## GraphQL
+
+```rust
+use std::collections::HashMap;
 
 db.set_graphql_schema(r#"
-    type Person {
-        id: ID!
-        name: String @search(by: [term])
-    }
+type Post {
+    id: ID!
+    title: String @search(by: [term])
+    author: Author @hasInverse(field: posts)
+}
+type Author {
+    id: ID!
+    name: String @id @search(by: [hash])
+    posts: [Post]
+}
 "#)?;
+
+let headers = HashMap::new();
 let response = db.graphql(
-    "{ queryPerson { name } }",
+    r#"mutation {
+        addPost(input: [{title: "Hello", author: {name: "Ann"}}]) {
+            post { id title author { name } }
+            numUids
+        }
+    }"#,
     None,
     serde_json::json!({}),
-    &std::collections::HashMap::new(),
+    &headers,
 )?;
+println!("{response}");
 ```
 
-See [DQL & GraphQL](queries.md) for patterns, mutations, and subscriptions.
+GraphQL execution errors arrive in `response["errors"]`; schema or transport
+failures return `CoreError`.
 
-## Supported types
-
-| Rust API | Type | Notes |
-|---|---|---|
-| `put` key | `&str` | UTF-8; keys sort lexicographically. |
-| `put` value | `&[u8]` | Arbitrary bytes, including binary. |
-| `get` | `Result<Option<Vec<u8>>, _>` | `None` when missing. |
-| `scan` | `Vec<(String, Vec<u8>)>` | Keys are lossy UTF-8; values stay raw bytes. |
-| `execute` value | JSON string | The envelope is string-only even in Rust. |
-
-## Store and read a JSON document
+## Subscriptions
 
 ```rust
-use datastreamdb_core::{Instance, InstanceConfig};
+use std::time::Duration;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let db = Instance::open(InstanceConfig::memory())?;
+let sub = db.graphql_subscribe(
+    r#"subscription { queryPost { title } }"#,
+    serde_json::json!({}),
+    &headers,
+    Duration::from_millis(100),
+)?;
 
-    let user = serde_json::json!({ "name": "Ada", "age": 36, "active": true });
-    db.put("user:1", serde_json::to_vec(&user)?.as_slice())?;
-
-    let raw = db.get("user:1")?.expect("user:1 exists");
-    let decoded: serde_json::Value = serde_json::from_slice(&raw)?;
-    println!("{} is {}", decoded["name"], decoded["age"]);
-    Ok(())
-}
+let event = sub.next()?;
+sub.close();
 ```
 
-## Query with prefix scans
-
-```rust
-let pairs = db.scan("user:", 100)?; // max 100 pairs
-for (key, value) in pairs {
-    let doc: serde_json::Value = serde_json::from_slice(&value)?;
-    println!("{key}: {}", doc["name"]);
-}
-```
-
-- `scan(prefix, limit)` returns keys in order.
-- `limit` is clamped to `MAX_SCAN_LIMIT` (100,000).
-- There is no cursor; narrow the prefix or raise the limit to page.
-- Use zero-padded ids for stable ordering (`user:0001`).
-
-## Atomic writes
-
-```rust
-use datastreamdb_core::{DEFAULT_PARTITION, WriteBatch};
-
-let mut batch = WriteBatch::new();
-batch
-    .put(DEFAULT_PARTITION, b"user:1", br#"{"name":"Ada"}"#)
-    .put(DEFAULT_PARTITION, b"user:2", br#"{"name":"Bob"}"#)
-    .delete(DEFAULT_PARTITION, b"user:3");
-db.write_batch(&batch)?;
-
-println!("staged {} operations", batch.len());
-```
-
-`write_batch` applies all operations atomically. `delete` is idempotent.
-
-## Delete and range delete
-
-```rust
-db.delete("user:1")?; // missing key is a no-op
-
-// Half-open range [start, end): ';' is the byte after ':'.
-let removed = db.delete_range("session:", "session;")?;
-println!("removed {removed} session keys");
-```
-
-`delete_range` is a typed Rust helper; it is not exposed in the JSON envelope.
-
-## Execute the JSON envelope
-
-Use `execute` when you want the same request format as the other bindings:
-
-```rust
-let response = db.execute(r#"{"op":"scan","prefix":"user:","limit":100}"#)?;
-let json: serde_json::Value = serde_json::from_str(&response)?;
-for pair in json["pairs"].as_array().expect("pairs") {
-    println!("{} = {}", pair["key"], pair["value"]);
-}
-```
-
-Envelope values are strings. For binary data, use the typed `put`/`get` API.
-
-## Durability
-
-```rust
-db.put("checkpoint", b"ok")?;
-db.flush()?; // returns storage errors
-```
-
-Dropping the last `Arc` also flushes, but `Drop` can only log failures. Call
-`flush` explicitly when the write must be durable before the process exits.
+`next_timeout` waits with thread sleeps; `next_async` and `stream` are available
+for async callers. Close subscriptions before dropping the instance.
 
 ## Errors
 
 `Instance` methods return `Result<_, datastreamdb_core::CoreError>`:
 
 ```rust
-match db.get("missing") {
-    Ok(Some(value)) => println!("{} bytes", value.len()),
-    Ok(None) => println!("not found"),
-    Err(err) => eprintln!("storage error: {err}"),
+match db.dql_query("{ q(func: has(name)) { name } }") {
+    Ok(result) => println!("{result}"),
+    Err(err) => eprintln!("query failed: {err}"),
 }
 ```
 
-Malformed configs and envelopes return `CoreError::BadRequest`; backend failures
-return `CoreError::Store`.
+Malformed configs return `CoreError::BadRequest`; backend failures return
+`CoreError::Store`; query and schema failures return `CoreError::Query` and
+`CoreError::Schema`.
 
 ## Share across threads
 
@@ -195,10 +143,10 @@ use std::thread;
 
 let db = Instance::open(InstanceConfig::memory())?;
 let mut workers = Vec::new();
-for worker in 0..4 {
+for _ in 0..4 {
     let db = db.clone();
     workers.push(thread::spawn(move || {
-        db.put(&format!("worker:{worker}"), b"ready").unwrap();
+        db.dql_query("{ q(func: has(name)) { name } }").unwrap();
     }));
 }
 for worker in workers {
@@ -206,16 +154,17 @@ for worker in workers {
 }
 ```
 
-`Instance` is `Send + Sync`. Use `Arc` clones rather than opening the same
+`Instance` is `Send + Sync`. Clone the `Arc` rather than opening the same
 persistent directory twice; the second open fails on the file lock.
 
 ## Limitations in 0.2.0
 
 - Embedded graph mode is single-node; clustering, ACL, and namespaces require
   the standalone servers.
-- Prefix scans are bounded and have no continuation cursor.
-- Raw KV and graph data use separate partitions, so `get` does not see DQL
-  predicates.
+- DQL alters are additive/updating; drop operations and upserts are not exposed
+  in the embedded API.
 - GraphQL subscriptions are poll-based; WebSocket push is not exposed.
-- DQL alters are additive/updating; drop operations and upserts are not
-  exposed in the embedded envelope.
+
+See [DQL and GraphQL](queries.md) for pattern filters, facets, and subscription
+shapes. The separate [low-level key/value API](key-value.md) is available for
+hosts that need raw storage.

@@ -13,111 +13,96 @@ If you link the shared library, make it discoverable at runtime:
 LD_LIBRARY_PATH=/path/to/lib ./app
 ```
 
-## Supported types
-
-| Item | Type | Notes |
-|---|---|---|
-| Config | JSON string | `{}` for memory; `data_dir` for persistence. |
-| Key | JSON string | UTF-8. |
-| Value | JSON string | UTF-8 only in the envelope. |
-| JSON document | escaped JSON string | Use a JSON library to build/parse. |
-| Binary | base64 string | The envelope has no byte-array value type. |
-| Response buffer | `uint8_t*` + length | Release with `datastreamdb_free_bytes`. |
-
-## Open, put, get, scan, batch, flush
+## Open an instance
 
 ```c
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "datastreamdb.h"
 
-static char *exec_copy(const datastreamdb_handle_t *h, const char *req) {
+static int exec(datastreamdb_handle_t *db, const char *request) {
   uint8_t *out = NULL;
   size_t len = 0;
-  if (datastreamdb_execute(h, (const uint8_t *)req, strlen(req), &out, &len)
-      != DATASTREAMDB_OK) {
-    return NULL;
+  int rc = datastreamdb_execute(db, (const uint8_t *)request,
+                                strlen(request), &out, &len);
+  if (rc != DATASTREAMDB_OK) {
+    fprintf(stderr, "execute: %s\n", datastreamdb_last_error());
+    return rc;
   }
-  char *copy = (char *)malloc(len + 1);
-  if (copy == NULL) {
-    datastreamdb_free_bytes(out, len);
-    return NULL;
-  }
-  memcpy(copy, out, len);
-  copy[len] = '\0';
+  fwrite(out, 1, len, stdout);
+  fputc('\n', stdout);
   datastreamdb_free_bytes(out, len);
-  return copy;
-}
-
-static int run(datastreamdb_handle_t *db, const char *req) {
-  char *response = exec_copy(db, req);
-  if (response == NULL) {
-    fprintf(stderr, "datastreamdb: %s\n", datastreamdb_last_error());
-    return -1;
-  }
-  printf("%s\n", response);
-  free(response);
-  return 0;
+  return DATASTREAMDB_OK;
 }
 
 int main(void) {
   datastreamdb_handle_t *db = NULL;
-  if (datastreamdb_open("{\"tenant\":\"app\"}", &db) != DATASTREAMDB_OK) {
+  if (datastreamdb_open("{}", &db) != DATASTREAMDB_OK) {
     fprintf(stderr, "open: %s\n", datastreamdb_last_error());
     return 1;
   }
 
-  run(db, "{\"op\":\"put\",\"key\":\"user:1\",\"value\":\"Ada\"}");
-  run(db, "{\"op\":\"put\",\"key\":\"user:2\",\"value\":\"Bob\"}");
-
-  // Prefix scan, ordered by key.
-  run(db, "{\"op\":\"scan\",\"prefix\":\"user:\",\"limit\":100}");
-
-  // Atomic multi-write: two puts + one delete.
-  run(db, "{\"op\":\"batch\","
-          "\"puts\":[{\"key\":\"user:3\",\"value\":\"Cara\"}],"
-          "\"deletes\":[\"user:2\"]}");
-
-  run(db, "{\"op\":\"get\",\"key\":\"user:1\"}");
-  run(db, "{\"op\":\"flush\"}");
+  /* DQL and GraphQL envelopes go here. */
 
   datastreamdb_close(db);
   return 0;
 }
 ```
 
-## DQL and GraphQL
+`{}` opens an in-memory instance. Pass
+`{"data_dir":"/var/lib/app/graph-a","tenant":"app"}` for a persistent one.
 
-Use the same envelope for graph operations:
+## DQL
 
-```json
-{"op":"dql_alter","schema":"name: string @index(exact) . friend: [uid] @reverse ."}
-{"op":"dql_mutate","query":"{ set { _:a <name> \"Ada\" . _:b <name> \"Bob\" . _:a <friend> _:b . } }"}
-{"op":"dql_query","query":"{ people(func: eq(name, \"Ada\")) { name friend { name } } }"}
-{"op":"set_graphql_schema","sdl":"type Person { id: ID! name: String @search(by: [term]) friend: [Person] @hasInverse(field: friend) }"}
-{"op":"graphql","query":"{ queryPerson { name friend { name } } }"}
+```c
+exec(db, "{\"op\":\"dql_alter\",\"schema\":\"name: string @index(exact) . friend: [uid] @reverse .\"}");
+
+exec(db, "{\"op\":\"dql_mutate\",\"query\":\"{ set { _:a <name> \\\"Ada\\\" . _:b <name> \\\"Bob\\\" . _:a <friend> _:b . } }\"}");
+
+exec(db, "{\"op\":\"dql_query\",\"query\":\"{ q(func: eq(name, \\\"Ada\\\")) { name friend { name } } }\"}");
 ```
 
-GraphQL subscriptions use `graphql_subscribe`, `graphql_next`, and
-`graphql_unsubscribe` with the returned id. See
-[DQL & GraphQL](queries.md) for the full request/response shapes.
+The C ABI takes JSON envelopes. Build them with a JSON library rather than
+escaping DQL by hand. DQL type declarations need one field per line, so a
+multiline schema is sent as a JSON string containing `\n`.
+
+## GraphQL
+
+```c
+exec(db, "{\"op\":\"set_graphql_schema\",\"sdl\":\"type Post { id: ID! title: String @search(by: [term]) }\"}");
+
+exec(db, "{\"op\":\"graphql\",\"query\":\"mutation { addPost(input: [{title: \\\"Hello\\\"}]) { post { id title } numUids } }\"}");
+
+exec(db, "{\"op\":\"graphql\",\"query\":\"{ queryPost { title } }\"}");
+```
+
+GraphQL execution errors arrive in `response.errors`, not as a failed envelope.
+
+## Subscriptions
+
+```c
+exec(db, "{\"op\":\"graphql_subscribe\",\"query\":\"subscription { queryPost { title } }\",\"poll_ms\":100}");
+/* Response: {"ok":true,"id":1,"response":{...}} */
+exec(db, "{\"op\":\"graphql_next\",\"id\":1,\"wait_ms\":1000}");
+exec(db, "{\"op\":\"graphql_unsubscribe\",\"id\":1}");
+```
+
+`graphql_next` returns `{changed, closed, response?}`. Close subscriptions when
+done.
 
 ## Request and response shapes
 
 | `op` | Request | Success response |
 |---|---|---|
-| `ping` | `{"op":"ping"}` | `{ok, instance, tenant, backend}` |
-| `put` | `key`, `value` | `{ok:true}` |
-| `get` | `key` | `{ok:true, value:string-or-null}` |
-| `delete` | `key` | `{ok:true}` |
-| `scan` | `prefix`, `limit?` | `{ok:true, pairs:[{key,value}]}` |
-| `batch` | `puts[]`, `deletes[]` | `{ok:true, applied:n}` |
-| `flush` | `{"op":"flush"}` | `{ok:true}` |
-
-`scan` defaults to 1000 pairs and clamps to 100,000. There is no cursor;
-narrow the prefix or raise the limit to page.
+| `dql_query` | `query` | `{ok:true,data:...}` |
+| `dql_mutate` | `query` | `{ok:true,uids:{...}}` |
+| `dql_alter` | `schema` | `{ok:true}` |
+| `set_graphql_schema` | `sdl` | `{ok:true}` |
+| `graphql` | `query`, `operation?`, `variables?`, `headers?` | `{ok:true,response:{data,errors}}` |
+| `graphql_subscribe` | `query`, `variables?`, `headers?`, `poll_ms?` | `{ok:true,id,response}` |
+| `graphql_next` | `id`, `wait_ms?` | `{ok:true,changed,closed,response?}` |
+| `graphql_unsubscribe` | `id` | `{ok:true,removed}` |
 
 ## Error handling
 
@@ -154,9 +139,10 @@ if (datastreamdb_execute(db, (const uint8_t *)req, strlen(req),
 
 - Embedded graph mode is single-node; clustering, ACL, and namespaces require
   the standalone servers.
-- Envelope values are strings; base64-encode binary data.
-- Raw KV and graph data use separate partitions.
+- DQL alters are additive/updating; drop operations and upserts are not exposed.
 - GraphQL subscriptions are poll-based; WebSocket push is not exposed.
-- Scans are bounded and have no continuation cursor.
 
-A complete reference consumer lives at `bindings/c/smoke.c` in the repo.
+See [DQL and GraphQL](queries.md) for pattern filters, facets, and subscription
+shapes. The separate [low-level key/value API](key-value.md) is available for
+hosts that need raw storage. A complete reference consumer lives at
+`bindings/c/smoke.c`.

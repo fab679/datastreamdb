@@ -52,26 +52,22 @@ their own writes:
 ```js
 const a = new Instance('{}')
 const b = new Instance('{}')
-a.put('name', 'Ada')
-a.get('name') // "Ada"
-b.get('name') // null
+
+a.dqlMutate('{ set { _:x <name> "Ada" . } }')
+console.log(a.dqlQuery('{ q(func: has(name)) { name } }')) // Ada
+console.log(b.dqlQuery('{ q(func: has(name)) { name } }')) // empty
 ```
 
-## Two data surfaces
+## Graph API
 
-An instance exposes two independent surfaces:
+DQL and GraphQL run against the instance's posting partition, with their own
+schema history, GraphQL SDL, and timestamp metadata. Reopening a directory
+instance restores the data, the schema, and the timestamps together.
 
-- **Raw key/value** — `put`, `get`, `scan`, `delete` on the `default` partition.
-  Values are UTF-8 strings in the bindings and arbitrary bytes in Rust.
-- **Graph** — DQL and GraphQL on the posting partition, with its own schema and
-  metadata.
-
-They intentionally do not overlap: a raw `put` does not create a predicate, and
-a DQL mutation is not visible through `get`. Choose the surface that fits the
-job rather than mixing them for the same records.
-
-Graph metadata (schema history, GraphQL SDL, timestamp ceiling) lives in a
-third, internal partition. Reopening a directory instance restores all three.
+The low-level key/value methods (`put`, `get`, `scan`, `batch`) are a separate
+storage API for hosts that need raw ordered storage. They are not part of the
+graph model and are documented in the
+[low-level key/value appendix](../embedding/key-value.md).
 
 ## Embedded lifecycle
 

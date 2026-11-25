@@ -1,7 +1,7 @@
 # @datastreamdb/core
 
-Embedded multi-instance graph database for Node.js. This package ships the
-Linux x64 (glibc) native addon for DataStreamDB 0.2.0.
+Embedded graph database for Node.js. This package ships the Linux x64 (glibc)
+native addon for DataStreamDB 0.2.0, with DQL and GraphQL in-process.
 
 ```sh
 npm install @datastreamdb/core
@@ -17,10 +17,28 @@ import { Instance, version } from '@datastreamdb/core'
 console.log(version()) // "0.2.0"
 
 const db = new Instance('{}') // isolated in-memory instance
-db.put('user:1', JSON.stringify({ name: 'Ada', age: 36 }))
 
-const raw = db.get('user:1')
-console.log(raw === null ? null : JSON.parse(raw).name) // Ada
+db.dqlAlter(`
+  name: string @index(exact) .
+  friend: [uid] @reverse .
+  type Person {
+    name
+    friend
+  }
+`)
+
+db.dqlMutate(`
+  { set {
+      _:ada <name> "Ada" .
+      _:bob <name> "Bob" .
+      _:ada <friend> _:bob .
+  } }
+`)
+
+const result = JSON.parse(db.dqlQuery(`
+  { people(func: eq(name, "Ada")) { name friend { name } } }
+`))
+console.log(result)
 ```
 
 Persistent instance:
@@ -35,37 +53,35 @@ const db = new Instance(JSON.stringify({
 `data_dir` takes an exclusive lock; a second open of the same directory fails
 until the first closes. `tenant` is a label, not an isolation boundary.
 
-## Query with prefix scans
+## GraphQL
 
 ```js
-const result = JSON.parse(db.execute(JSON.stringify({
-  op: 'scan',
-  prefix: 'user:',
-  limit: 100,
-})))
+db.setGraphqlSchema(`
+  type Post {
+    id: ID!
+    title: String @search(by: [term])
+    author: Author @hasInverse(field: posts)
+  }
+  type Author {
+    id: ID!
+    name: String @id @search(by: [hash])
+    posts: [Post]
+  }
+`)
 
-for (const { key, value } of result.pairs) {
-  console.log(key, JSON.parse(value))
-}
+const response = JSON.parse(db.graphql(`
+  mutation {
+    addPost(input: [{title: "Hello", author: {name: "Ann"}}]) {
+      post { id title author { name } }
+      numUids
+    }
+  }
+`))
 ```
 
-Keys are returned in lexicographic order. `limit` defaults to 1000 and is
-clamped to 100,000. There is no continuation cursor in 0.2.0.
-
-## Atomic writes
-
-```js
-const result = JSON.parse(db.execute(JSON.stringify({
-  op: 'batch',
-  puts: [
-    { key: 'user:1', value: JSON.stringify({ name: 'Ada' }) },
-    { key: 'user:2', value: JSON.stringify({ name: 'Bob' }) },
-  ],
-  deletes: ['user:3'],
-})))
-
-console.log(result.applied) // 3
-```
+Subscriptions are poll-based via `graphqlSubscribe`, `graphqlNext`, and
+`graphqlUnsubscribe`. Embedded graph mode is single-node; see the full guide at
+<https://fab679.github.io/datastreamdb/embedding/queries/>.
 
 ## API
 
@@ -74,28 +90,18 @@ console.log(result.applied) // 3
 | `new Instance(configJson)` | Open a memory or persistent instance. |
 | `id(): string` | Unique instance id. |
 | `backend(): string` | `"memory"` or `"fjall"`. |
-| `put(key: string, value: string)` | Upsert a UTF-8 value. |
-| `get(key: string): string \| null` | Read a UTF-8 value. |
-| `execute(requestJson: string): string` | `ping`, `put`, `get`, `delete`, `scan`, `batch`, `flush`. |
-| `version(): string` | Binding/engine version. |
+| `dqlAlter(schema)` | Apply additive/updating DQL schema. |
+| `dqlMutate(mutation): string` | Apply a DQL mutation; returns assigned uids as JSON. |
+| `dqlQuery(query): string` | Run a DQL query; returns JSON text. |
+| `setGraphqlSchema(sdl)` | Install/replace the GraphQL schema. |
+| `graphql(query, variablesJson?, operation?, headersJson?): string` | Run GraphQL; returns JSON text. |
+| `graphqlSubscribe(query, variablesJson?, headersJson?, pollMs?): number` | Create a poll subscription. |
+| `graphqlNext(id, waitMs?): string` | Poll a subscription. |
+| `graphqlUnsubscribe(id): boolean` | Cancel a subscription. |
 
-Values are strings in the raw KV API. Serialize JSON documents with
-`JSON.stringify`; base64-encode binary data.
-
-## DQL and GraphQL
-
-```js
-db.dqlAlter('name: string @index(exact) .\nfriend: [uid] @reverse .\ntype Person {\n name\n friend\n}')
-db.dqlMutate('{ set { _:a <name> "Ada" .\n_:b <name> "Bob" .\n_:a <friend> _:b .\n} }')
-console.log(db.dqlQuery('{ people(func: eq(name, "Ada")) { name friend { name } } }'))
-
-db.setGraphqlSchema('type Person { id: ID! name: String @search(by: [term]) }')
-console.log(db.graphql('{ queryPerson { name } }'))
-```
-
-GraphQL subscriptions are poll-based via `graphqlSubscribe`, `graphqlNext`, and
-`graphqlUnsubscribe`. Embedded graph mode is single-node; see the full guide at
-<https://fab679.github.io/datastreamdb/embedding/queries/>.
+The low-level `put`, `get`, `execute` (scan/batch), and `flush` methods remain
+available for raw storage, but graph applications should use DQL and GraphQL.
+See <https://fab679.github.io/datastreamdb/embedding/key-value/>.
 
 ## Build and test
 

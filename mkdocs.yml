@@ -12,6 +12,7 @@ exclude_docs: |
 # Kept as a landing page for the pre-0.3 tutorial URL.
 not_in_nav: |
   embedding/tutorials.md
+  embedding/key-value.md
 site_url: https://fab679.github.io/datastreamdb/
 repo_url: https://github.com/fab679/datastreamdb
 repo_name: fab679/datastreamdb

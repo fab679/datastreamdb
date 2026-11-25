@@ -48,17 +48,6 @@ int main(void) {
   CHECK(strstr(ping, "\"backend\":\"memory\"") != NULL, "ping backend");
   free(ping);
 
-  char *put = exec_copy(a, "{\"op\":\"put\",\"key\":\"n\",\"value\":\"Ada\"}");
-  CHECK(put != NULL, "put a");
-  free(put);
-
-  char *ga = exec_copy(a, "{\"op\":\"get\",\"key\":\"n\"}");
-  char *gb = exec_copy(b, "{\"op\":\"get\",\"key\":\"n\"}");
-  CHECK(ga != NULL && strstr(ga, "Ada") != NULL, "a reads Ada");
-  CHECK(gb != NULL && strstr(gb, "null") != NULL, "b isolated (null)");
-  free(ga);
-  free(gb);
-
   char *alter = exec_copy(a,
       "{\"op\":\"dql_alter\",\"schema\":\"name: string @index(exact) .\"}");
   CHECK(alter != NULL, "dql alter");
@@ -69,10 +58,14 @@ int main(void) {
   CHECK(mut != NULL, "dql mutate");
   free(mut);
 
-  char *query = exec_copy(a,
+  char *qa = exec_copy(a,
       "{\"op\":\"dql_query\",\"query\":\"{ q(func: has(name)) { name } }\"}");
-  CHECK(query != NULL && strstr(query, "Ada") != NULL, "dql query");
-  free(query);
+  char *qb = exec_copy(b,
+      "{\"op\":\"dql_query\",\"query\":\"{ q(func: has(name)) { name } }\"}");
+  CHECK(qa != NULL && strstr(qa, "Ada") != NULL, "a reads Ada");
+  CHECK(qb != NULL && strstr(qb, "Ada") == NULL, "b isolated (no Ada)");
+  free(qa);
+  free(qb);
 
   char *bad = exec_copy(a, "{\"op\":\"nope\"}");
   CHECK(bad == NULL, "bad op fails");

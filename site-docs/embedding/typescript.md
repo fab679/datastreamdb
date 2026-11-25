@@ -25,7 +25,7 @@ const persistent = new Instance(JSON.stringify({
   tenant: 'app',
 }))
 
-console.log(memory.id(), memory.backend())      // uuid, 'memory'
+console.log(memory.id(), memory.backend())        // uuid, 'memory'
 console.log(persistent.id(), persistent.backend()) // uuid, 'fjall'
 ```
 
@@ -33,9 +33,11 @@ console.log(persistent.id(), persistent.backend()) // uuid, 'fjall'
 - `data_dir` selects the persistent fjall backend and takes an exclusive lock.
 - `tenant` is a label, not an isolation boundary.
 
-## DQL and GraphQL
+## DQL
 
 ```js
+const db = new Instance('{}')
+
 db.dqlAlter(`
   name: string @index(exact) .
   friend: [uid] @reverse .
@@ -44,126 +46,78 @@ db.dqlAlter(`
     friend
   }
 `)
-db.dqlMutate('{ set { _:a <name> "Ada" . _:b <name> "Bob" . _:a <friend> _:b . } }')
-console.log(db.dqlQuery('{ people(func: eq(name, "Ada")) { name friend { name } } }'))
 
+db.dqlMutate(`
+  { set {
+      _:ada <name> "Ada" .
+      _:bob <name> "Bob" .
+      _:ada <friend> _:bob .
+  } }
+`)
+
+const result = JSON.parse(db.dqlQuery(`
+  { people(func: eq(name, "Ada")) { name friend { name } } }
+`))
+console.log(result)
+```
+
+`dqlMutate` returns a JSON string of blank-node assignments. `dqlQuery`
+returns JSON text; parse it before reading.
+
+## GraphQL
+
+```js
 db.setGraphqlSchema(`
-  type Person {
+  type Post {
     id: ID!
-    name: String @search(by: [term])
+    title: String @search(by: [term])
+    author: Author @hasInverse(field: posts)
+  }
+  type Author {
+    id: ID!
+    name: String @id @search(by: [hash])
+    posts: [Post]
   }
 `)
-console.log(db.graphql('{ queryPerson { name } }'))
+
+const response = JSON.parse(db.graphql(`
+  mutation {
+    addPost(input: [{title: "Hello", author: {name: "Ann"}}]) {
+      post { id title author { name } }
+      numUids
+    }
+  }
+`))
+console.log(response)
 ```
 
-See [DQL & GraphQL](queries.md) for pattern filters, mutations, and
-poll-based subscriptions.
+GraphQL execution errors arrive in `response.errors`; invalid SDL or transport
+failures throw a JS `Error`.
 
-## Supported types
-
-| API | Type | Notes |
-|---|---|---|
-| `put(key, value)` | `string` | UTF-8 key and value. |
-| `get(key)` | `string \| null` | `null` when missing. |
-| `execute(request)` | JSON string | Envelope values are strings only. |
-| `scan` result | `{ key, value }[]` | Values are UTF-8 strings. |
-| JSON document | `JSON.stringify` / `JSON.parse` | No native object values. |
-| Binary | base64 string | The native API does not accept `Buffer` values. |
-
-## Store and read a JSON document
+## Subscriptions
 
 ```js
-const user = { name: 'Ada', age: 36, active: true }
+const id = db.graphqlSubscribe(`
+  subscription { queryPost { title } }
+`)
 
-db.put('user:1', JSON.stringify(user))
-
-const raw = db.get('user:1')
-const decoded = raw === null ? null : JSON.parse(raw)
-console.log(decoded.name, decoded.age) // Ada 36
+let event = JSON.parse(db.graphqlNext(id, 0)) // initial response
+db.graphql('mutation { addPost(input: [{title: "Hello again"}]) { numUids } }')
+event = JSON.parse(db.graphqlNext(id, 1000))  // changed after the mutation
+db.graphqlUnsubscribe(id)
 ```
 
-Use a key prefix for collections: `user:1`, `user:2`, `post:1`.
-
-## Query with prefix scans
-
-```js
-const response = JSON.parse(db.execute(JSON.stringify({
-  op: 'scan',
-  prefix: 'user:',
-  limit: 100,
-})))
-
-for (const { key, value } of response.pairs) {
-  const user = JSON.parse(value)
-  console.log(key, user.name)
-}
-```
-
-- Keys come back in lexicographic order.
-- `limit` defaults to 1000 and is clamped to 100,000.
-- There is no cursor; use a narrower prefix or a larger limit to page.
-- Zero-pad numeric ids when order matters (`user:0001`).
-
-## Atomic writes
-
-```js
-const result = JSON.parse(db.execute(JSON.stringify({
-  op: 'batch',
-  puts: [
-    { key: 'user:1', value: JSON.stringify({ name: 'Ada' }) },
-    { key: 'user:2', value: JSON.stringify({ name: 'Bob' }) },
-  ],
-  deletes: ['user:3'],
-})))
-
-console.log(result.applied) // 3
-```
-
-The batch is atomic. `delete` is idempotent.
-
-## Delete and flush
-
-```js
-db.execute(JSON.stringify({ op: 'delete', key: 'user:1' }))
-db.execute('{"op":"flush"}')
-```
-
-`flush` makes prior writes durable. Dropping the last reference also flushes,
-but call `flush` explicitly when the result matters.
-
-## Execute the envelope
-
-All operations are available through `execute`:
-
-```js
-const ping = JSON.parse(db.execute('{"op":"ping"}'))
-console.log(ping.ok, ping.backend) // true 'memory'
-
-const value = JSON.parse(db.execute(JSON.stringify({
-  op: 'get',
-  key: 'user:1',
-})))
-console.log(value.value) // string or null
-```
-
-Success responses:
-
-| `op` | Response |
-|---|---|
-| `ping` | `{ ok, instance, tenant, backend }` |
-| `put`, `delete`, `flush` | `{ ok: true }` |
-| `get` | `{ ok: true, value: string \| null }` |
-| `scan` | `{ ok: true, pairs: [{ key, value }] }` |
-| `batch` | `{ ok: true, applied: number }` |
+`graphqlNext(id, waitMs)` blocks up to `waitMs` and returns
+`{ changed, closed, response? }`. Close subscriptions when done.
 
 ## Errors
 
-The binding throws a JS `Error` for malformed requests, unknown ops, invalid
-configs, locked directories, and storage failures:
+The binding throws a JS `Error` for malformed requests, invalid SDL, locked
+directories, and engine failures:
 
 ```js
 try {
-  db.execute('{"op":"nope"}')
+  db.dqlQuery('{ q(func: has(name)) { name } }')
 } catch (err) {
   console.error('datastreamdb:', err.message)
 }
@@ -179,7 +133,9 @@ sharing a native object across isolates.
 
 - Embedded graph mode is single-node; clustering, ACL, and namespaces require
   the standalone servers.
-- Raw KV values are strings; store binary data as base64.
-- Raw KV and graph data use separate partitions.
+- DQL alters are additive/updating; drop operations and upserts are not exposed.
 - GraphQL subscriptions are poll-based; WebSocket push is not exposed.
-- Scans are bounded and have no continuation cursor.
+
+See [DQL and GraphQL](queries.md) for pattern filters, facets, and subscription
+shapes. The separate [low-level key/value API](key-value.md) is available for
+hosts that need raw storage.
