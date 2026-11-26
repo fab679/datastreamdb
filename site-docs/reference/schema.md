@@ -41,6 +41,53 @@ relationships use `@reverse` instead.
 There is **no separate `date` type**. Use `datetime` with an RFC3339 value such
 as `"2026-11-30T17:00:00Z"^^<xs:dateTime>`.
 
+## Mutating values
+
+Every type has an RDF literal form. A mutation is a `set` block; the final `.`
+needs a newline (or `#`) before the closing `}`.
+
+| Type | Literal form | Example |
+|---|---|---|
+| `string` | quoted text | `"Ada"` |
+| `int` | `xs:int` | `"30"^^<xs:int>` |
+| `float` | `xs:float` or `xs:double` | `"8.7"^^<xs:float>` |
+| `bool` | `xs:boolean` | `"true"^^<xs:boolean>` |
+| `datetime` | `xs:dateTime` (RFC3339) | `"2026-11-30T17:00:00Z"^^<xs:dateTime>` |
+| `geo` | `geo:geojson` | `"{\"type\":\"Point\",\"coordinates\":[-122.4194,37.7749]}"^^<geo:geojson>` |
+| `uid` | node reference | `_:ada <friend> _:bob .` or `<0x2> <friend> <0x3> .` |
+| `password` | plain text; hashed on write | `_:ada <secret> "hunter2" .` |
+| `bigfloat` | `xs:decimal` | `"123.456"^^<xs:decimal>` |
+| `binary` | `xs:base64Binary` | `"hello"^^<xs:base64Binary>` |
+| `float32vector` | `xs:[]float32` | reserved; vector mutations are not available in 0.2.1 |
+| `default` | any of the above; type is derived | `"Ada"` |
+
+```text
+{
+  set {
+    _:a <name> "Ada" .
+    _:a <i> "30"^^<xs:int> .
+    _:a <f> "8.7"^^<xs:float> .
+    _:a <b> "true"^^<xs:boolean> .
+    _:a <d> "2026-11-30T17:00:00Z"^^<xs:dateTime> .
+    _:a <g> "{\"type\":\"Point\",\"coordinates\":[-122.4194,37.7749]}"^^<geo:geojson> .
+    _:a <big> "123.456"^^<xs:decimal> .
+    _:a <bin> "hello"^^<xs:base64Binary> .
+  }
+}
+```
+
+Pass the block to `dql_mutate` (Rust), `dqlMutate` (TypeScript), or
+`dql_mutate` (Python), or post it to `/mutate` on a standalone server.
+
+A Polygon uses the same `geo:geojson` form:
+
+```text
+_:a <g> "{\"type\":\"Polygon\",\"coordinates\":[[[-122.42,37.77],[-122.41,37.77],[-122.41,37.78],[-122.42,37.77]]]}"^^<geo:geojson> .
+```
+
+`binary` literals are stored as their bytes and returned as a byte array in DQL
+JSON. `password` values are stored hashed; verify them with `checkpwd`.
+
 ## Index examples
 
 ### String
